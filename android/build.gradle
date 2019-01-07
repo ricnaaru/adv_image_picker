@@ -1,0 +1,41 @@
+group 'ric.com.advimagepicker'
+version '1.0-SNAPSHOT'
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.2.1'
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 27
+
+    defaultConfig {
+        minSdkVersion 21
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    lintOptions {
+        disable 'InvalidPackage'
+    }
+}
+
+dependencies {
+    implementation "com.android.support:support-v4:27.1.0"
+    implementation "com.android.support:design:27.1.1"
+    implementation 'com.karumi:dexter:4.2.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
+}

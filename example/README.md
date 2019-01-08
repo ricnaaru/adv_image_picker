@@ -1,16 +1,62 @@
-# adv_image_picker_example
+```
+import 'dart:io';
 
-Demonstrates how to use the adv_image_picker plugin.
+import 'package:adv_image_picker/adv_image_picker.dart';
+import 'package:flutter/material.dart';
 
-## Getting Started
+void main() => runApp(MyApp());
 
-This project is a starting point for a Flutter application.
+class MyApp extends StatelessWidget {
+ // This widget is the root of your application.
+ @override
+ Widget build(BuildContext context) {
+   return MaterialApp(
+     title: 'Flutter Demo',
+     theme: ThemeData(
+       primarySwatch: Colors.blue,
+     ),
+     home: MyHomePage(title: 'Image Picker Demo Home Page'),
+   );
+ }
+}
 
-A few resources to get you started if this is your first Flutter project:
+class MyHomePage extends StatefulWidget {
+ MyHomePage({Key key, this.title}) : super(key: key);
 
-- [Lab: Write your first Flutter app](https://flutter.io/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.io/docs/cookbook)
+ final String title;
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+ @override
+ _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+ int _counter = 0;
+ List<File> files = [];
+
+ void _pickImage() async {
+   files.addAll(await AdvImagePicker.pickImagesToFile(context));
+
+   setState(() {
+
+   });
+ }
+
+ @override
+ Widget build(BuildContext context) {
+   return Scaffold(
+     appBar: AppBar(
+       title: Text(widget.title),
+     ),
+     body: Center(
+       child: GridView.count(crossAxisCount: 4,
+         children: files.map((File f) => Image.file(f, fit: BoxFit.cover,)).toList(),
+       ),
+     ),
+     floatingActionButton: FloatingActionButton(
+       onPressed: _pickImage,
+       child: Icon(Icons.add),
+     ),
+   );
+ }
+}
+```

@@ -1,14 +1,57 @@
-# adv_image_picker
+# Advanced Image Picker
 
-An advanced image picker with crop
+This is our custom Image Picker that enabling you to multi pick image with our Custom UI
 
-## Getting Started
+*Note*: This plugin is still under development, and some Components might not be available yet or still has so many bugs.
+- We are using [photo_view](https://pub.dartlang.org/packages/photo_view), [path_provider](https://pub.dartlang.org/packages/path_provider), [camera](https://pub.dartlang.org/packages/camera) library too to support this image picker
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.io/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+## Installation
 
-For help getting started with Flutter, view our 
-[online documentation](https://flutter.io/docs), which offers tutorials, 
-samples, guidance on mobile development, and a full API reference.
+First, add `adv_image_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
+
+```
+adv_image_picker: ^0.0.01
+```
+
+## Example
+```
+class MyHomePage extends StatefulWidget {
+  MyHomePage({Key key, this.title}) : super(key: key);
+
+  final String title;
+
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  int _counter = 0;
+  List<File> files = [];
+
+  void _pickImage() async {
+    files.addAll(await AdvImagePicker.pickImagesToFile(context));
+
+    setState(() {
+
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: GridView.count(crossAxisCount: 4,
+          children: files.map((File f) => Image.file(f, fit: BoxFit.cover,)).toList(),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _pickImage,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+```

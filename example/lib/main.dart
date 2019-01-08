@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
-import 'package:adv_image_picker/pages/camera.dart';
 import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
@@ -33,7 +32,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   List<File> files = [];
 
-  void _incrementCounter() async {
+  void _pickImage() async {
     files.addAll(await AdvImagePicker.pickImagesToFile(context));
 
     setState(() {
@@ -53,9 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _pickImage,
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }

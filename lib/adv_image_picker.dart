@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
+import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
@@ -26,19 +27,26 @@ class AdvImagePicker {
   static String confirm = "Confirm";
   static String cancel = "Cancel";
 
-  static Future<List<File>> pickImagesToFile(BuildContext context) async {
+  static Future<List<File>> pickImagesToFile(BuildContext context,
+      {bool usingCamera = true,
+        bool usingGallery = true,
+        bool allowMultiple = true}) async {
+    assert(usingCamera != false || usingGallery != false);
+
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
 
       if (!hasPermission) return null;
     }
 
+    Widget advImagePickerHome = usingCamera ? CameraPage(allowMultiple: allowMultiple) : GalleryPage(allowMultiple: allowMultiple);
+
     List<File> files = [];
     List<ResultItem> images = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (BuildContext context) => CameraPage(),
-            settings: RouteSettings(name: "CameraPage")));
+            builder: (BuildContext context) => advImagePickerHome,
+            settings: RouteSettings(name: "AdvImagePickerHome")));
 
     for (ResultItem item in images) {
       File file = File.fromUri(Uri.parse(item.filePath));
@@ -59,19 +67,26 @@ class AdvImagePicker {
     return files;
   }
 
-  static Future<List<ByteData>> pickImagesToByte(BuildContext context) async {
+  static Future<List<ByteData>> pickImagesToByte(BuildContext context,
+      {bool usingCamera = true,
+      bool usingGallery = true,
+      bool allowMultiple = true}) async {
+    assert(usingCamera != false || usingGallery != false);
+
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
 
       if (!hasPermission) return null;
     }
 
+    Widget advImagePickerHome = usingCamera ? CameraPage(allowMultiple: allowMultiple) : GalleryPage(allowMultiple: allowMultiple);
+
     List<ByteData> datas = [];
     List<ResultItem> images = await Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (BuildContext context) => CameraPage(),
-            settings: RouteSettings(name: "CameraPage")));
+            builder: (BuildContext context) => advImagePickerHome,
+            settings: RouteSettings(name: "AdvImagePickerHome")));
 
     for (ResultItem item in images) {
       datas.add(item.data);

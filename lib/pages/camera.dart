@@ -14,6 +14,10 @@ import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/components/adv_loading_with_barrier.dart';
 
 class CameraPage extends StatefulWidget {
+  final bool allowMultiple;
+
+  CameraPage({bool allowMultiple}) : this.allowMultiple = allowMultiple ?? true;
+
   @override
   _CameraPageState createState() {
     return _CameraPageState();
@@ -32,8 +36,8 @@ IconData getCameraLensIcon(CameraLensDirection direction) {
   throw ArgumentError(AdvImagePicker.unknownLensDirection);
 }
 
-void logError(String code, String message) =>
-    print('${AdvImagePicker.error}: $code\n${AdvImagePicker.errorMessage}: $message');
+void logError(String code, String message) => print(
+    '${AdvImagePicker.error}: $code\n${AdvImagePicker.errorMessage}: $message');
 
 class _CameraPageState extends State<CameraPage> {
   CameraController controller;
@@ -105,8 +109,9 @@ class _CameraPageState extends State<CameraPage> {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (BuildContext context) =>
-                                  GalleryPage()));
+                              builder: (BuildContext context) => GalleryPage(
+                                    allowMultiple: widget.allowMultiple,
+                                  )));
                     },
                   ),
                 ])),
@@ -123,7 +128,8 @@ class _CameraPageState extends State<CameraPage> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (BuildContext context) => ResultPage([ResultItem(resultPath, bytes)])));
+                      builder: (BuildContext context) => ResultPage(
+                          [ResultItem("", resultPath, data: bytes)])));
             });
           },
           backgroundColor: AdvImagePicker.primaryColor,
@@ -250,7 +256,8 @@ class _CameraPageState extends State<CameraPage> {
   void _listener() {
     if (mounted) setState(() {});
     if (controller.value.hasError) {
-      showInSnackBar('${AdvImagePicker.error} ${controller.value.errorDescription}');
+      showInSnackBar(
+          '${AdvImagePicker.error} ${controller.value.errorDescription}');
     }
   }
 }

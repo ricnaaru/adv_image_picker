@@ -1,8 +1,9 @@
 import 'package:flutter/services.dart';
 
 class ResultItem {
+  final String albumId;
   final String filePath;
-  final ByteData data;
+  ByteData data;
 
-  ResultItem(this.filePath, this.data);
+  ResultItem(this.albumId, this.filePath, {this.data});
 }

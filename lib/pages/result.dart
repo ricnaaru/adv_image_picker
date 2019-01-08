@@ -77,7 +77,7 @@ class _ResultPageSate extends State<ResultPage> {
                         textColor: AdvImagePicker.primaryColor,
                         onPressed: () {
                           Navigator.popUntil(
-                              context, ModalRoute.withName("CameraPage"));
+                              context, ModalRoute.withName("AdvImagePickerHome"));
                           if (Navigator.canPop(context))
                             Navigator.pop(context, widget.images);
                         },

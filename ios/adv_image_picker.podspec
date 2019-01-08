@@ -3,7 +3,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'adv_image_picker'
-  s.version          = '0.0.1'
+  s.version          = '0.0.2'
   s.summary          = 'An advanced image picker with crop'
   s.description      = <<-DESC
 An advanced image picker with crop

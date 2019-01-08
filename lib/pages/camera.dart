@@ -15,8 +15,11 @@ import 'package:pit_components/components/adv_loading_with_barrier.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
+  final bool enableGallery;
 
-  CameraPage({bool allowMultiple}) : this.allowMultiple = allowMultiple ?? true;
+  CameraPage({bool allowMultiple, bool enableGallery})
+      : this.allowMultiple = allowMultiple ?? true,
+        this.enableGallery = enableGallery ?? true;
 
   @override
   _CameraPageState createState() {
@@ -67,54 +70,57 @@ class _CameraPageState extends State<CameraPage> {
           backgroundColor: Colors.white,
           iconTheme: IconThemeData(color: Colors.black87),
         ),
-        bottomSheet: Container(
-            padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-            color: Colors.white,
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  AdvButtonWithIcon(
-                    AdvImagePicker.rotate,
-                    Icon(Icons.switch_camera),
-                    Axis.vertical,
-                    buttonSize: ButtonSize.small,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black87,
-                    onPressed: () {
-                      if (cameras == null || cameras.length == 0) return;
+        bottomSheet: widget.enableGallery
+            ? Container(
+                padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
+                color: Colors.white,
+                child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      AdvButtonWithIcon(
+                        AdvImagePicker.rotate,
+                        Icon(Icons.switch_camera),
+                        Axis.vertical,
+                        buttonSize: ButtonSize.small,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black87,
+                        onPressed: () {
+                          if (cameras == null || cameras.length == 0) return;
 
-                      _currentCameraIndex++;
-                      if (_currentCameraIndex >= cameras.length)
-                        _currentCameraIndex = 0;
+                          _currentCameraIndex++;
+                          if (_currentCameraIndex >= cameras.length)
+                            _currentCameraIndex = 0;
 
-                      onNewCameraSelected(cameras[_currentCameraIndex]);
-                    },
-                  ),
-                  Container(
-                      margin: EdgeInsets.only(bottom: 8.0),
-                      child: Text(
-                        AdvImagePicker.photo,
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700, fontSize: 12.0),
-                      )),
-                  AdvButtonWithIcon(
-                    AdvImagePicker.gallery,
-                    Icon(Icons.photo_album),
-                    Axis.vertical,
-                    buttonSize: ButtonSize.small,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black87,
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) => GalleryPage(
-                                    allowMultiple: widget.allowMultiple,
-                                  )));
-                    },
-                  ),
-                ])),
+                          onNewCameraSelected(cameras[_currentCameraIndex]);
+                        },
+                      ),
+                      Container(
+                          margin: EdgeInsets.only(bottom: 8.0),
+                          child: Text(
+                            AdvImagePicker.photo,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, fontSize: 12.0),
+                          )),
+                      AdvButtonWithIcon(
+                        AdvImagePicker.gallery,
+                        Icon(Icons.photo_album),
+                        Axis.vertical,
+                        buttonSize: ButtonSize.small,
+                        backgroundColor: Colors.white,
+                        textColor: Colors.black87,
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                      GalleryPage(
+                                        allowMultiple: widget.allowMultiple,
+                                      )));
+                        },
+                      ),
+                    ]))
+            : null,
         key: _scaffoldKey,
         body: AdvFutureBuilder(
             widgetBuilder: _buildWidget, futureExecutor: _loadAll),

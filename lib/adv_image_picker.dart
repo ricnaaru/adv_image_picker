@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
-import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,8 +28,8 @@ class AdvImagePicker {
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
-        bool usingGallery = true,
-        bool allowMultiple = true}) async {
+      bool usingGallery = true,
+      bool allowMultiple = true}) async {
     assert(usingCamera != false || usingGallery != false);
 
     if (Platform.isAndroid) {
@@ -39,7 +38,9 @@ class AdvImagePicker {
       if (!hasPermission) return null;
     }
 
-    Widget advImagePickerHome = usingCamera ? CameraPage(allowMultiple: allowMultiple) : GalleryPage(allowMultiple: allowMultiple);
+    Widget advImagePickerHome = usingCamera
+        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple)
+        : GalleryPage(allowMultiple: allowMultiple);
 
     List<File> files = [];
     List<ResultItem> images = await Navigator.push(
@@ -79,7 +80,9 @@ class AdvImagePicker {
       if (!hasPermission) return null;
     }
 
-    Widget advImagePickerHome = usingCamera ? CameraPage(allowMultiple: allowMultiple) : GalleryPage(allowMultiple: allowMultiple);
+    Widget advImagePickerHome = usingCamera
+        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple)
+        : GalleryPage(allowMultiple: allowMultiple);
 
     List<ByteData> datas = [];
     List<ResultItem> images = await Navigator.push(

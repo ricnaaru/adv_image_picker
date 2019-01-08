@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/components/adv_loading_with_barrier.dart';
+import 'package:pit_components/components/adv_visibility.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -70,57 +71,57 @@ class _CameraPageState extends State<CameraPage> {
           backgroundColor: Colors.white,
           iconTheme: IconThemeData(color: Colors.black87),
         ),
-        bottomSheet: widget.enableGallery
-            ? Container(
-                padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-                color: Colors.white,
-                child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      AdvButtonWithIcon(
-                        AdvImagePicker.rotate,
-                        Icon(Icons.switch_camera),
-                        Axis.vertical,
-                        buttonSize: ButtonSize.small,
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black87,
-                        onPressed: () {
-                          if (cameras == null || cameras.length == 0) return;
+        bottomSheet: Container(
+            padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
+            color: Colors.white,
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  AdvButtonWithIcon(
+                    AdvImagePicker.rotate,
+                    Icon(Icons.switch_camera),
+                    Axis.vertical,
+                    buttonSize: ButtonSize.small,
+                    backgroundColor: Colors.white,
+                    textColor: Colors.black87,
+                    onPressed: () {
+                      if (cameras == null || cameras.length == 0) return;
 
-                          _currentCameraIndex++;
-                          if (_currentCameraIndex >= cameras.length)
-                            _currentCameraIndex = 0;
+                      _currentCameraIndex++;
+                      if (_currentCameraIndex >= cameras.length)
+                        _currentCameraIndex = 0;
 
-                          onNewCameraSelected(cameras[_currentCameraIndex]);
-                        },
-                      ),
-                      Container(
-                          margin: EdgeInsets.only(bottom: 8.0),
-                          child: Text(
-                            AdvImagePicker.photo,
-                            style: TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 12.0),
-                          )),
-                      AdvButtonWithIcon(
-                        AdvImagePicker.gallery,
-                        Icon(Icons.photo_album),
-                        Axis.vertical,
-                        buttonSize: ButtonSize.small,
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black87,
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (BuildContext context) =>
-                                      GalleryPage(
-                                        allowMultiple: widget.allowMultiple,
-                                      )));
-                        },
-                      ),
-                    ]))
-            : null,
+                      onNewCameraSelected(cameras[_currentCameraIndex]);
+                    },
+                  ),
+                  Container(
+                      margin: EdgeInsets.only(bottom: 8.0),
+                      child: Text(
+                        AdvImagePicker.photo,
+                        style: TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 12.0),
+                      )),
+                  AdvVisibility(
+                    visibility: widget.enableGallery ? VisibilityFlag.visible : VisibilityFlag.invisible,
+                    child: AdvButtonWithIcon(
+                      AdvImagePicker.gallery,
+                      Icon(Icons.photo_album),
+                      Axis.vertical,
+                      buttonSize: ButtonSize.small,
+                      backgroundColor: Colors.white,
+                      textColor: Colors.black87,
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (BuildContext context) => GalleryPage(
+                                      allowMultiple: widget.allowMultiple,
+                                    )));
+                      },
+                    ),
+                  ),
+                ])),
         key: _scaffoldKey,
         body: AdvFutureBuilder(
             widgetBuilder: _buildWidget, futureExecutor: _loadAll),

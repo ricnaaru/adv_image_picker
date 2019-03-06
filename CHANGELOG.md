@@ -29,3 +29,7 @@
 ## 0.1.0
 
 * Dependencies to stable channel Flutter
+
+## 0.1.1
+
+* Result Null Checking fixes

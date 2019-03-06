@@ -10,7 +10,7 @@ This is our custom Image Picker that enabling you to multi pick image with our C
 First, add `adv_image_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
 
 ```
-adv_image_picker: ^0.1.0
+adv_image_picker: ^0.1.1
 ```
 
 ## Example

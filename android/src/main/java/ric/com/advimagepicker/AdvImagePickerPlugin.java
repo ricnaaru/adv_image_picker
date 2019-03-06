@@ -70,8 +70,6 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
     private MethodCall methodCall;
     private ThreadPoolExecutor mDecodeThreadPool;
     private Picasso picasso;
-    private static int NUMBER_OF_CORES =
-            Runtime.getRuntime().availableProcessors();
 
     private AdvImagePickerPlugin(Registrar registrar) {
         this.activity = registrar.activity();
@@ -92,13 +90,9 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 KEEP_ALIVE_TIME_UNIT,
                 mDecodeWorkQueue);
 
-//        picasso = Picasso.get();
-
         picasso = new Picasso.Builder(context).listener(new Picasso.Listener() {
             @Override public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
                 exception.printStackTrace();
-                Log.d("ricric", "error uri => " + uri.toString());
-                Log.d("ricric", "error => " + exception.getLocalizedMessage());
             }
         }).build();
     }
@@ -110,12 +104,6 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
     @Override
     public void onMethodCall(MethodCall call, final Result result) {
-
-//        if (!setPendingMethodCallAndResult(call, result)) {
-//            finishWithAlreadyActiveError();
-//            return;
-//        }
-
         if (call.method.equals("getPermission")) {
             Dexter.withActivity(activity)
                     .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -168,10 +156,11 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
             String[] projection = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
             String albumName = call.argument("albumName");
+            albumName = albumName.replaceAll("'", "''");
+
             final String orderBy = MediaStore.Images.Media.DATE_TAKEN + " DESC";
             Cursor cursor = context.getContentResolver().query(uri, projection, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " = '" + albumName + "'", null, orderBy);
             int columnData = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-            int columnIndexFolderName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
 
             ArrayList<String> assetIds = new ArrayList<String>();
 
@@ -190,54 +179,25 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
             final int height = call.argument("height");
             final int quality = call.argument("quality");
             GetThumbnailTask task = new GetThumbnailTask(this.messenger, albumId, assetId, width, height, quality);
-//            task.execute("");
+
             task.executeOnExecutor(mDecodeThreadPool);
             result.success(true);
-//            finishWithSuccess(true);
         } else if (call.method.equals("getAlbumOriginal")) {
             final String albumId = call.argument("albumId");
             final String assetId = call.argument("assetId");
             final int quality = call.argument("quality");
             GetImageTask task = new GetImageTask(this.messenger, albumId, assetId, quality);
-//            task.execute("");
+
             task.executeOnExecutor(mDecodeThreadPool);
             result.success(true);
-//            finishWithSuccess(true);
         } else {
             result.notImplemented();
         }
     }
 
-    private void finishWithAlreadyActiveError() {
-        finishWithError("already_active", "Image picker is already active");
-    }
-
-    private void finishWithError(String errorCode, String errorMessage) {
-        if (pendingResult != null)
-            pendingResult.error(errorCode, errorMessage, null);
-        clearMethodCallAndResult();
-    }
-
     private void clearMethodCallAndResult() {
         methodCall = null;
         pendingResult = null;
-    }
-
-    private void finishWithSuccess(Boolean result) {
-        if (pendingResult != null)
-            pendingResult.success(result);
-        clearMethodCallAndResult();
-    }
-
-    private boolean setPendingMethodCallAndResult(
-            MethodCall methodCall, MethodChannel.Result result) {
-        if (pendingResult != null) {
-            return false;
-        }
-
-        this.methodCall = methodCall;
-        pendingResult = result;
-        return true;
     }
 
     private class GetImageTask extends AsyncTask<String, Void, Void> {
@@ -257,7 +217,9 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         @Override
         protected Void doInBackground(String... strings) {
             File file = new File(this.assetId);
-            Uri contentUri = FileProvider.getUriForFile(context, "com.ric.advimagepickerexample.fileprovider", file);
+            String packageName = context.getPackageName();
+
+            Uri contentUri = FileProvider.getUriForFile(context,  packageName + ".fileprovider", file);
             byte[] bytesArray = null;
 
             try {
@@ -326,7 +288,9 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         @Override
         protected Void doInBackground(String... strings) {
             File file = new File(this.assetId);
-            Uri contentUri = FileProvider.getUriForFile(context, "com.ric.advimagepickerexample.fileprovider", file);
+
+            String packageName = context.getPackageName();
+            Uri contentUri = FileProvider.getUriForFile(context, packageName + ".fileprovider", file);
             InputStream stream = null;
             byte[] byteArray = null;
 
@@ -380,34 +344,6 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
             return null;
         }
-    }
-
-
-    private static Bitmap getCorrectlyOrientedImage(Context context, Uri photoUri) throws IOException {
-        InputStream is = context.getContentResolver().openInputStream(photoUri);
-        BitmapFactory.Options dbo = new BitmapFactory.Options();
-        dbo.inScaled = false;
-        dbo.inSampleSize = 1;
-        dbo.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(is, null, dbo);
-        is.close();
-
-        int orientation = getOrientation(context, photoUri);
-
-        Bitmap srcBitmap;
-        is = context.getContentResolver().openInputStream(photoUri);
-        srcBitmap = BitmapFactory.decodeStream(is);
-        is.close();
-
-        if (orientation > 0) {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(orientation);
-
-            srcBitmap = Bitmap.createBitmap(srcBitmap, 0, 0, srcBitmap.getWidth(),
-                    srcBitmap.getHeight(), matrix, true);
-        }
-
-        return srcBitmap;
     }
 
     private static int getOrientation(Context context, Uri photoUri) {

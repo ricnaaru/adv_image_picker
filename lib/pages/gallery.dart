@@ -371,7 +371,7 @@ class _GalleryPageState extends State<GalleryPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            ResultPage([ResultItem(assetId, message)]),
+                            ResultPage([ResultItem(albumId, assetId, data: message)]),
                       ));
                 });
               }

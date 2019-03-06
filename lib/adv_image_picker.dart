@@ -8,6 +8,7 @@ import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pit_components/pit_components.dart';
 
 class AdvImagePicker {
   static Color lightGrey = Color(0xffc6c6c6);
@@ -25,12 +26,15 @@ class AdvImagePicker {
   static String confirmation = "Confirmation";
   static String confirm = "Confirm";
   static String cancel = "Cancel";
+  static String loadingAssetName = "images/image_picker_loading.gif";
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
       bool allowMultiple = true}) async {
     assert(usingCamera != false || usingGallery != false);
+
+    PitComponents.loadingAssetName = loadingAssetName;
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
@@ -48,6 +52,8 @@ class AdvImagePicker {
         MaterialPageRoute(
             builder: (BuildContext context) => advImagePickerHome,
             settings: RouteSettings(name: "AdvImagePickerHome")));
+
+    if (images == null) return [];
 
     for (ResultItem item in images) {
       File file = File.fromUri(Uri.parse(item.filePath));
@@ -74,6 +80,8 @@ class AdvImagePicker {
       bool allowMultiple = true}) async {
     assert(usingCamera != false || usingGallery != false);
 
+    PitComponents.loadingAssetName = loadingAssetName;
+
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
 
@@ -90,6 +98,8 @@ class AdvImagePicker {
         MaterialPageRoute(
             builder: (BuildContext context) => advImagePickerHome,
             settings: RouteSettings(name: "AdvImagePickerHome")));
+
+    if (images == null) return [];
 
     for (ResultItem item in images) {
       datas.add(item.data);

@@ -172,13 +172,12 @@ class _CameraPageState extends State<CameraPage> {
 
   Widget _buildWidget(BuildContext context) {
     return AdvLoadingWithBarrier(
-        "images/nemob_loading.gif",
-        Stack(
+        content: Stack(
           children: <Widget>[
             _cameraPreviewWidget(),
           ],
         ),
-        cameras == null);
+        isProcessing: cameras == null);
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).

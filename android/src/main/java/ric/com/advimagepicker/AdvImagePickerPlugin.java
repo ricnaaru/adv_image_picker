@@ -246,6 +246,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                 if (rotate > 0) {
                     Matrix matrix = new Matrix();
+                    Log.d("ricirc", "rotate 1 => " + rotate);
                     matrix.postRotate(rotate);
 
                     bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
@@ -321,6 +322,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                 if (rotate > 0) {
                     Matrix matrix = new Matrix();
+                    Log.d("ricirc", "rotate => " + rotate);
                     matrix.postRotate(rotate);
 
                     bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),

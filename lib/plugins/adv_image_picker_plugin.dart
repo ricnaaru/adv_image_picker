@@ -60,7 +60,7 @@ class AdvImagePickerPlugin {
   }
 
   static Future<dynamic> getAlbumOriginal(
-      String albumId, String assetId, int quality, Function callback) async {
+      String albumId, String assetId, int quality, Function callback, {int maxSize}) async {
     assert(albumId != null);
     assert(assetId != null);
 
@@ -77,12 +77,16 @@ class AdvImagePickerPlugin {
           'adv_image_picker/image/fetch/original/$albumId/$assetId', null);
     });
 
-    var thumbnails = await _channel.invokeMethod(
-        "getAlbumOriginal", <String, dynamic>{
+    Map<String, dynamic> param = <String, dynamic>{
       "albumId": albumId,
       "assetId": assetId,
       "quality": quality
-    });
+    };
+
+    if (maxSize != null) param.putIfAbsent("maxSize", () => maxSize);
+
+    var thumbnails = await _channel.invokeMethod(
+        "getAlbumOriginal", param);
     return thumbnails;
   }
 

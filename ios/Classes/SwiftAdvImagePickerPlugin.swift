@@ -195,6 +195,7 @@ public class SwiftAdvImagePickerPlugin: NSObject, FlutterPlugin {
             let albumId = arguments["albumId"] as! String
             let assetId = arguments["assetId"] as! String
             let quality = arguments["quality"] as! Int
+            let maxSize = (arguments["maxSize"] ?? 0 as AnyObject) as! Int
             
             let manager = PHImageManager.default()
             let options = PHImageRequestOptions()
@@ -223,7 +224,24 @@ public class SwiftAdvImagePickerPlugin: NSObject, FlutterPlugin {
                             (image: UIImage?, info) in
                             print("info => \(info)")
                             if info != nil {
-                                self.messenger.send(onChannel: "adv_image_picker/image/fetch/original/\(albumId)/\(assetId)", message: UIImageJPEGRepresentation(image!, CGFloat(quality / 100)))
+                                if (maxSize != 0) {
+                                    let initialWidth = image?.size.width ?? 0.0;
+                                    let initialHeight = image?.size.height ?? 0.0;
+                                    let floatMaxSize = CGFloat(maxSize);
+                                    let width: CGFloat = initialHeight.isLess(than: initialWidth) ? floatMaxSize : (initialWidth / initialHeight * floatMaxSize);
+                                    let height: CGFloat = initialWidth.isLessThanOrEqualTo(initialHeight) ? floatMaxSize : (initialHeight / initialWidth * floatMaxSize);
+                                    let newSize = CGSize(width: width, height: height);
+                                    let rect = CGRect(x: 0, y: 0, width: width, height: height)
+                                    
+                                    UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+                                    image!.draw(in: rect)
+                                    let newImage = UIGraphicsGetImageFromCurrentImageContext()
+                                    UIGraphicsEndImageContext()
+                                    
+                                    self.messenger.send(onChannel: "adv_image_picker/image/fetch/original/\(albumId)/\(assetId)", message: UIImageJPEGRepresentation(newImage!, CGFloat(quality / 100)))
+                                } else {
+                                    self.messenger.send(onChannel: "adv_image_picker/image/fetch/original/\(albumId)/\(assetId)", message: UIImageJPEGRepresentation(image!, CGFloat(quality / 100)))
+                                }
                             } else {
                                 print("nilllll")
                             }

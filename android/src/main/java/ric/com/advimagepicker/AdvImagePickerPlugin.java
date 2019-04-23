@@ -3,33 +3,21 @@ package ric.com.advimagepicker;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.support.media.ExifInterface;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.karumi.dexter.listener.single.PermissionListener;
-import com.squareup.picasso.MemoryPolicy;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Transformation;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,25 +27,19 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import androidx.core.content.FileProvider;
+import androidx.exifinterface.media.ExifInterface;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
-
-import static android.media.ThumbnailUtils.OPTIONS_RECYCLE_INPUT;
 
 /**
  * AdvImagePickerPlugin
@@ -91,7 +73,8 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 mDecodeWorkQueue);
 
         picasso = new Picasso.Builder(context).listener(new Picasso.Listener() {
-            @Override public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
+            @Override
+            public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
                 exception.printStackTrace();
             }
         }).build();
@@ -219,7 +202,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
             File file = new File(this.assetId);
             String packageName = context.getPackageName();
 
-            Uri contentUri = FileProvider.getUriForFile(context,  packageName + ".fileprovider", file);
+            Uri contentUri = FileProvider.getUriForFile(context, packageName + ".fileprovider", file);
             byte[] bytesArray = null;
 
             try {

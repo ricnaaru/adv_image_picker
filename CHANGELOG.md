@@ -33,3 +33,23 @@
 ## 0.1.1
 
 * Result Null Checking fixes
+
+## 0.1.2
+
+* Avoiding AndroidX
+
+## 0.2.0
+
+* Upgrade to AndroidX
+
+## 0.2.0+1
+
+* Upgrade to AndroidX
+
+## 0.2.0+2
+
+* AndroidX Upgrade fixes
+
+## 0.2.0+3
+
+* AndroidX Upgrade fixes (dexter dependency)

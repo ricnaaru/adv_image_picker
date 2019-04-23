@@ -17,9 +17,10 @@ import 'package:pit_components/components/adv_visibility.dart';
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
   final bool enableGallery;
+  final int maxSize;
 
-  CameraPage({bool allowMultiple, bool enableGallery})
-      : this.allowMultiple = allowMultiple ?? true,
+  CameraPage({bool allowMultiple, bool enableGallery, this.maxSize})
+      : assert(maxSize == null || maxSize >= 0), this.allowMultiple = allowMultiple ?? true,
         this.enableGallery = enableGallery ?? true;
 
   @override
@@ -117,6 +118,7 @@ class _CameraPageState extends State<CameraPage> {
                             MaterialPageRoute(
                                 builder: (BuildContext context) => GalleryPage(
                                       allowMultiple: widget.allowMultiple,
+                                  maxSize: widget.maxSize,
                                     )));
                       },
                     ),
@@ -215,7 +217,7 @@ class _CameraPageState extends State<CameraPage> {
       await controller.dispose();
     }
 
-    controller = CameraController(cameraDescription, ResolutionPreset.high);
+    controller = CameraController(cameraDescription, ResolutionPreset.medium);
 
     controller.addListener(_listener);
 
@@ -246,7 +248,7 @@ class _CameraPageState extends State<CameraPage> {
     }
 
     try {
-      await controller.takePicture(filePath);
+      await controller.takePicture(filePath, maxSize: 200);
     } on CameraException catch (e) {
       _showCameraException(e);
       return null;

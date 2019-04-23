@@ -1,6 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI
-version: 0.1.1
+version: 0.2.0+3
 author: Richardo <richardothayeb@gmail.com>
 homepage: https://nemob.id
 
@@ -10,14 +10,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  pit_components: ^0.2.0
+  pit_components: ^0.2.6+2
   camera:
     git:
-      url: git://github.com/wouterhardeman/plugins.git
-      ref: fix-camera-orientation-crash
+      url: git://github.com/ricnaaru/plugins.git
       path: packages/camera
-  path_provider: 0.4.1
-  photo_view: ^0.1.2
+  path_provider: ^0.5.0+1
+  photo_view: ^0.2.2
+  image: ^2.0.7
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec

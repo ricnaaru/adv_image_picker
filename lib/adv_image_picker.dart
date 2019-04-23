@@ -31,7 +31,8 @@ class AdvImagePicker {
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
-      bool allowMultiple = true}) async {
+        bool allowMultiple = true,
+        int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
     PitComponents.loadingAssetName = loadingAssetName;
@@ -43,8 +44,8 @@ class AdvImagePicker {
     }
 
     Widget advImagePickerHome = usingCamera
-        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple)
-        : GalleryPage(allowMultiple: allowMultiple);
+        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple, maxSize: maxSize)
+        : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
     List<File> files = [];
     List<ResultItem> images = await Navigator.push(
@@ -77,7 +78,8 @@ class AdvImagePicker {
   static Future<List<ByteData>> pickImagesToByte(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
-      bool allowMultiple = true}) async {
+      bool allowMultiple = true,
+      int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
     PitComponents.loadingAssetName = loadingAssetName;
@@ -89,8 +91,8 @@ class AdvImagePicker {
     }
 
     Widget advImagePickerHome = usingCamera
-        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple)
-        : GalleryPage(allowMultiple: allowMultiple);
+        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple, maxSize: maxSize)
+        : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
     List<ByteData> datas = [];
     List<ResultItem> images = await Navigator.push(

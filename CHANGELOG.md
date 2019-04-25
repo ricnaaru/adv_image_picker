@@ -53,3 +53,7 @@
 ## 0.2.0+3
 
 * AndroidX Upgrade fixes (dexter dependency)
+
+## 0.2.1
+
+* AndroidX Upgrade fixes (dexter dependency)

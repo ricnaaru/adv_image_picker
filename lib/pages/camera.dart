@@ -248,7 +248,7 @@ class _CameraPageState extends State<CameraPage> {
     }
 
     try {
-      await controller.takePicture(filePath, maxSize: 200);
+      await controller.takePicture(filePath, maxSize: widget.maxSize);
     } on CameraException catch (e) {
       _showCameraException(e);
       return null;

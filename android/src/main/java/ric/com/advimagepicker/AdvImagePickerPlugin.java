@@ -168,8 +168,9 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         } else if (call.method.equals("getAlbumOriginal")) {
             final String albumId = call.argument("albumId");
             final String assetId = call.argument("assetId");
+            final int maxSize = call.argument("maxSize") == null ? 0 : (int)(call.argument("maxSize"));
             final int quality = call.argument("quality");
-            GetImageTask task = new GetImageTask(this.messenger, albumId, assetId, quality);
+            GetImageTask task = new GetImageTask(this.messenger, albumId, assetId, quality, maxSize);
 
             task.executeOnExecutor(mDecodeThreadPool);
             result.success(true);
@@ -188,13 +189,15 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         String albumId;
         String assetId;
         int quality;
+        int maxSize;
 
-        GetImageTask(BinaryMessenger messenger, String albumId, String assetId, int quality) {
+        GetImageTask(BinaryMessenger messenger, String albumId, String assetId, int quality, int maxSize) {
             super();
             this.messenger = messenger;
             this.albumId = albumId;
             this.assetId = assetId;
             this.quality = quality;
+            this.maxSize = maxSize;
         }
 
         @Override
@@ -214,6 +217,15 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 int rotate = 0;
                 ExifInterface exif = new ExifInterface(this.assetId);
                 int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+                if (maxSize != 0) {
+                    double initialWidth = bitmap.getWidth();
+                    double initialHeight = bitmap.getHeight();
+                    int width = initialHeight < initialWidth ? maxSize : (int)(initialWidth / initialHeight * maxSize);
+                    int height = initialWidth <= initialHeight ? maxSize : (int)(initialHeight / initialWidth * maxSize);
+                    bitmap = Bitmap.createScaledBitmap(bitmap, width,
+                            height, true);
+                }
 
                 switch (orientation) {
                     case ExifInterface.ORIENTATION_ROTATE_270:

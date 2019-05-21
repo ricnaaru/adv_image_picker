@@ -61,3 +61,7 @@
 ## 0.2.2
 
 * Rotation bug and bug after lock screen fixed
+
+## 0.2.3
+
+* PIT Components dependency upgraded

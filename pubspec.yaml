@@ -1,6 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI
-version: 0.2.3
+version: 0.3.0
 author: Richardo <richardothayeb@gmail.com>
 homepage: https://nemob.id
 
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  pit_components: ^0.3.1
+  pit_components: ^0.4.0+1
   camera:
     git:
       url: git://github.com/ricnaaru/plugins.git

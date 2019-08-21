@@ -1,3 +1,12 @@
+## 0.3.2
+
+* Fix terminated apps when used under Flutter 1.5.4
+* Using Image List plugin to enhance user-experience when scrolling through local image
+
+## 0.3.1
+
+* Change dependency to photo_view to 0.3.0
+
 ## 0.3.0
 
 * Breaking change: Flutter upgrade to 1.5.4

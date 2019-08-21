@@ -11,7 +11,7 @@ class AdvImagePickerPlugin {
     return await _channel.invokeMethod('getPermission');
   }
 
-  static Future<List<Album>> getAlbums() async {
+  static Future<dynamic> getAlbums() async {
     final List<dynamic> images = await _channel.invokeMethod('getAlbums');
     List<Album> albums = List<Album>();
     for (var element in images) {

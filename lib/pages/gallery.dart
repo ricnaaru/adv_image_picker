@@ -6,9 +6,12 @@ import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:image_list/image_list.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_future_builder.dart';
+import 'package:pit_components/components/adv_loading_with_barrier.dart';
 
 class GalleryPage extends StatefulWidget {
   final bool allowMultiple;
@@ -24,76 +27,19 @@ class GalleryPage extends StatefulWidget {
 
 class _GalleryPageState extends State<GalleryPage> {
   List<Album> albums;
-  List<SelectedAlbumItem> _selectedImages = [];
+  int _selectedImageCount = 0;
   List<int> rows = [];
   List<String> needToBeRendered = [];
   Album _selectedAlbum;
-  ScrollController _scrollController = ScrollController();
-  int _gridCrossAxisCount = 3;
-  double _gridPadding = 2.0;
-  double _itemWidth = 0.0;
-  double _itemHeight = 0.0;
   double _marginBottom = 0.0;
   BuildContext contentContext;
   String lastScroll = "";
   int batchCounter = 0;
-  TaskManager taskManager;
+  ImageListController _controller;
   bool _multipleMode = false;
+  bool _processing = false;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ValueNotifier<int> buttonController = ValueNotifier<int>(0);
-
-  @override
-  void dispose() {
-    super.dispose();
-    taskManager?.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(() {
-      if (!_scrollController.hasClients) return;
-
-      int visibleRowFrom = (_scrollController.position.pixels / _itemHeight).ceil();
-      int visibleRowTo =
-          ((contentContext.size.height + _scrollController.position.pixels) / _itemHeight).ceil();
-
-      if (lastScroll != "$visibleRowFrom - $visibleRowTo") {
-        batchCounter++;
-        lastScroll = "$visibleRowFrom - $visibleRowTo";
-        double batchNo = batchCounter.toDouble(); //_scrollController.position.pixels;
-        List<LoadItem> batch = [];
-        for (int i = visibleRowFrom; i <= visibleRowTo; i++) {
-          for (int j = 0; j < _gridCrossAxisCount; j++) {
-            int index = ((i - 1) * _gridCrossAxisCount) + j;
-            if (_selectedAlbum.items.length > index &&
-                index >= 0 &&
-                _selectedAlbum.items[index].thumbnail == null) {
-              batch.insert(
-                  0,
-                  LoadItem(batchNo, index, _selectedAlbum.identifier,
-                      _selectedAlbum.items[((i - 1) * _gridCrossAxisCount) + j].identifier));
-            }
-          }
-        }
-        taskManager.add(batch);
-      }
-    });
-  }
-
-  _thumbnailListener(String albumId, String assetId, ByteData data) {
-    if (data == null) return;
-
-    if (this.mounted) {
-      setState(() {
-        albums
-            .firstWhere((Album loopAlbum) => loopAlbum.identifier == albumId)
-            .items
-            .firstWhere((AlbumItem item) => item.identifier == assetId)
-            .thumbnail = data;
-      });
-    }
-  }
 
   Future<void> getAlbums() async {
     try {
@@ -122,43 +68,10 @@ class _GalleryPageState extends State<GalleryPage> {
     if (!_multipleMode) {
       _scaffoldKey.currentState
           .showBottomSheet((BuildContext context) {
-            return _SmartButton(buttonController, onPressed: () {
-              List<ResultItem> images = [];
+            return _SmartButton(buttonController, onPressed: () async {
+              if (_processing) return;
 
-//          for (int i = _selectedImages.length - 1; i >= 0; i--) {
-//            SelectedAlbumItem item = _selectedImages[i];
-              for (SelectedAlbumItem item in _selectedImages) {
-                images.add(ResultItem(item.albumId, item.assetId));
-                if (widget.maxSize != null) {
-                  AdvImagePickerPlugin.getAlbumOriginal(item.albumId, item.assetId, 100,
-                          (albumId, assetId, data) {
-                        images
-                            .firstWhere((ResultItem loopItem) =>
-                        loopItem.albumId == albumId && loopItem.filePath == assetId)
-                            .data = data;
-
-                        if (images.where((ResultItem loopItem) => loopItem.data != null).length ==
-                            _selectedImages.length) {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (BuildContext context) => ResultPage(images)));
-                        }
-                      }, maxSize: widget.maxSize);
-                }else {
-                  AdvImagePickerPlugin.getAlbumOriginal(item.albumId, item.assetId, 100,
-                          (albumId, assetId, data) {
-                        images
-                            .firstWhere((ResultItem loopItem) =>
-                        loopItem.albumId == albumId && loopItem.filePath == assetId)
-                            .data = data;
-
-                        if (images.where((ResultItem loopItem) => loopItem.data != null).length ==
-                            _selectedImages.length) {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (BuildContext context) => ResultPage(images)));
-                        }
-                      }, maxSize: widget.maxSize);
-                }
-              }
+              await submit();
             });
           })
           .closed
@@ -171,14 +84,47 @@ class _GalleryPageState extends State<GalleryPage> {
     }
   }
 
+  submit() async {
+    setState(() {
+      _processing = true;
+    });
+
+    List<ResultItem> images = [];
+
+    List<ImageData> imageData = await _controller.getSelectedImage();
+
+    for (ImageData data in imageData) {
+      images.add(ResultItem(data.albumId, data.assetId));
+
+      AdvImagePickerPlugin.getAlbumOriginal(data.albumId, data.assetId, 100,
+          (albumId, assetId, data) {
+        images
+            .firstWhere((ResultItem loopItem) =>
+                loopItem.albumId == albumId && loopItem.filePath == assetId)
+            .data = data;
+
+        if (images.where((ResultItem loopItem) => loopItem.data != null).length ==
+            _selectedImageCount) {
+          setState(() {
+            _processing = false;
+          });
+
+          var page = ResultPage(images);
+          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => page));
+        }
+      }, maxSize: widget.maxSize);
+    }
+  }
+
   switchMultipleMode() {
     if (mounted) {
-      _selectedImages.clear();
+      _selectedImageCount = 0;
       buttonController.value = 0;
 
       setState(() {
         _marginBottom = _multipleMode ? 0.0 : 80.0;
         _multipleMode = !_multipleMode;
+        _controller.setMaxImage(_multipleMode ? null : 1);
       });
     }
   }
@@ -210,12 +156,7 @@ class _GalleryPageState extends State<GalleryPage> {
             items: albums == null || albums.length == 0
                 ? [DropdownMenuItem(child: Text(""), value: "")]
                 : albums.map((Album album) {
-                    int selectedCount =
-                        _selectedImages.where((item) => item.albumId == album.name).length;
-                    return DropdownMenuItem(
-                        child: Text(
-                            "${album.name}${_multipleMode && selectedCount > 0 ? " ($selectedCount)" : ""}"),
-                        value: album.name);
+                    return DropdownMenuItem(child: Text("${album.name}"), value: album.name);
                   }).toList(),
             value: albums == null ? "" : _selectedAlbum.name,
             onChanged: (albumName) {
@@ -223,28 +164,18 @@ class _GalleryPageState extends State<GalleryPage> {
 
               setState(() {
                 _selectedAlbum = albums.firstWhere((Album album) => album.name == albumName);
-
-                _loadAllItems();
               });
+
+              _controller.reloadAlbum(_selectedAlbum.identifier);
             }),
       ),
-      body: LayoutBuilder(builder: (BuildContext context, BoxConstraints constraints) {
-        double mainMaxWidth = constraints.maxWidth;
-
-        _itemWidth =
-            (mainMaxWidth - ((_gridCrossAxisCount + 1) * _gridPadding)) / _gridCrossAxisCount;
-        _itemHeight = (_itemWidth / 0.85) + _gridPadding;
-
-        if (taskManager == null) {
-          taskManager = TaskManager(_itemWidth.toInt() * 2, _itemWidth.toInt() * 2, 100,
-              thumbnailListener: _thumbnailListener);
-        }
-
-        return AdvFutureBuilder(
-          futureExecutor: _loadAll,
-          widgetBuilder: _buildWidget,
-        );
-      }),
+      body: AdvLoadingWithBarrier(
+        isProcessing: _processing,
+        content: (BuildContext context) => AdvFutureBuilder(
+              futureExecutor: _loadAll,
+              widgetBuilder: _buildWidget,
+            ),
+      ),
     );
   }
 
@@ -255,134 +186,15 @@ class _GalleryPageState extends State<GalleryPage> {
 
     if (_selectedAlbum == null) return Container();
 
-    return Builder(builder: (BuildContext context) {
-      contentContext = context;
-
-      return GridView.builder(
-        itemCount: _selectedAlbum.assetCount,
-        controller: _scrollController,
-        padding: EdgeInsets.all(_gridPadding).copyWith(bottom: _marginBottom),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _gridCrossAxisCount,
-          mainAxisSpacing: _gridPadding,
-          crossAxisSpacing: _gridPadding,
-          childAspectRatio: 1.0,
-        ),
-        itemBuilder: (BuildContext context, int index) {
-          if (_selectedAlbum.items[index].thumbnail == null)
-            return Container(color: AdvImagePicker.lightGrey);
-
-          SelectedAlbumItem selectedItem = _selectedImages.length == 0
-              ? null
-              : _selectedImages.firstWhere(
-                  (SelectedAlbumItem item) =>
-                      item.albumId == _selectedAlbum.name &&
-                      item.assetId == _selectedAlbum.items[index].identifier,
-                  orElse: () => null);
-
-          bool selected = selectedItem != null;
-
-          int selectionIndex = _selectedImages.length == 0
-              ? 0
-              : _selectedImages.indexWhere((SelectedAlbumItem item) =>
-                      item.albumId == _selectedAlbum.name &&
-                      item.assetId == _selectedAlbum.items[index].identifier) +
-                  1;
-
-          return GestureDetector(
-            child: Container(
-              color: AdvImagePicker.lightGrey,
-              child: Container(
-                height: _itemWidth,
-                width: _itemWidth,
-                child: Stack(children: [
-                  Image(
-                    image: MemoryImage(_selectedAlbum.items[index].thumbnail.buffer.asUint8List()),
-                    fit: BoxFit.cover,
-                    gaplessPlayback: true,
-                  ),
-                  _multipleMode
-                      ? Positioned(
-                          child: Container(
-                            margin: EdgeInsets.all(4.0),
-                            alignment: Alignment.center,
-                            width: 24.0,
-                            height: 24.0,
-                            decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(width: 1.0, color: AdvImagePicker.accentColor),
-                                color: selected ? AdvImagePicker.accentColor : Colors.white),
-                            child: selected
-                                ? Text(
-                                    "$selectionIndex",
-                                    style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.w700,
-                                        color: Colors.white),
-                                  )
-                                : null,
-                          ),
-                          top: 0.0,
-                          right: 0.0,
-                        )
-                      : Container()
-                ]),
-              ),
-            ),
-            onLongPress: (widget.allowMultiple)
-                ? () {
-                    toggleMultipleMode();
-                    if (_selectedImages.length >= AdvImagePicker.maxImage) return;
-                    _selectedImages.add(SelectedAlbumItem(
-                        _selectedAlbum.name,
-                        _selectedAlbum.items[index].identifier,
-                        _selectedAlbum.items[index].thumbnail));
-                    buttonController.value += 1;
-                  }
-                : null,
-            onTap: () {
-              if (_multipleMode) {
-                if (selected) {
-                  _selectedImages.remove(selectedItem);
-                  buttonController.value -= 1;
-                } else if (!selected) {
-                  if (_selectedImages.length >= AdvImagePicker.maxImage) return;
-                  _selectedImages.add(SelectedAlbumItem(
-                      _selectedAlbum.name,
-                      _selectedAlbum.items[index].identifier,
-                      _selectedAlbum.items[index].thumbnail));
-                  buttonController.value += 1;
-                }
-              } else {
-                AdvImagePickerPlugin.getAlbumOriginal(
-                    _selectedAlbum.identifier, _selectedAlbum.items[index].identifier, 100,
-                    (albumId, assetId, message) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ResultPage([ResultItem(albumId, assetId, data: message)]),
-                      ));
-                }, maxSize: widget.maxSize);
-              }
-              setState(() {});
-            },
-          );
-        },
-      );
-    });
-  }
-
-  _loadAllItems() {
-    List<LoadItem> temp = [];
-    for (int i = _selectedAlbum.items.length - 1; i >= 0; i--) {
-      if (_selectedAlbum.items[i].thumbnail == null) {
-        temp.add(LoadItem(0, i, _selectedAlbum.identifier, _selectedAlbum.items[i].identifier));
-      }
-    }
-
-    taskManager.add(temp);
-    temp.clear();
+    return Container(
+      margin: EdgeInsets.only(bottom: _marginBottom),
+      child: ImageList(
+        albumId: _selectedAlbum.identifier,
+        maxImages: _multipleMode ? null : 1,
+        onListCreated: _onListCreated,
+        onImageTapped: _onImageTapped,
+      ),
+    );
   }
 
   Future<bool> _loadAll(BuildContext context) async {
@@ -391,9 +203,26 @@ class _GalleryPageState extends State<GalleryPage> {
     await getAlbums();
     _selectedAlbum = albums != null && albums.length > 0 ? albums[0] : null;
 
-    if (_selectedAlbum != null) _loadAllItems();
+    setState(() {});
 
     return true;
+  }
+
+  void _onListCreated(ImageListController controller) {
+    _controller = controller;
+  }
+
+  void _onImageTapped(int count) {
+    _selectedImageCount = count;
+
+    if (!_multipleMode) {
+      submit();
+      return;
+    }
+
+    setState(() {
+      buttonController.value = count;
+    });
   }
 }
 

@@ -44,7 +44,8 @@ IconData getCameraLensIcon(CameraLensDirection direction) {
 void logError(String code, String message) => print(
     '${AdvImagePicker.error}: $code\n${AdvImagePicker.errorMessage}: $message');
 
-class _CameraPageState extends State<CameraPage> {
+class _CameraPageState extends State<CameraPage>
+    with WidgetsBindingObserver {
   CameraController controller;
   String imagePath;
   int _currentCameraIndex = 0;
@@ -73,6 +74,7 @@ class _CameraPageState extends State<CameraPage> {
           iconTheme: IconThemeData(color: Colors.black87),
         ),
         bottomSheet: Container(
+          height: 80.0,
             padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
             color: Colors.white,
             child: Row(
@@ -174,11 +176,7 @@ class _CameraPageState extends State<CameraPage> {
 
   Widget _buildWidget(BuildContext context) {
     return AdvLoadingWithBarrier(
-        content: Stack(
-          children: <Widget>[
-            _cameraPreviewWidget(),
-          ],
-        ),
+        content: (BuildContext context) => _cameraPreviewWidget(),
         isProcessing: cameras == null);
   }
 
@@ -191,16 +189,22 @@ class _CameraPageState extends State<CameraPage> {
       controller.removeListener(_listener);
       controller.value = controller.value.copyWith(
           previewSize: Size(
-        size.height,
+        size.height - kToolbarHeight - 110.0, //80 ukuran bottom sheet, 20 ukuran status bar
         size.width,
       ));
       controller.addListener(_listener);
-      return OverflowBox(
-        maxHeight: double.infinity,
-        child: AspectRatio(
-          aspectRatio: controller.value.aspectRatio,
-          child: CameraPreview(controller),
-        ),
+      print("controller.value.aspectRatio => ${controller.value.aspectRatio}");
+      final size2 = MediaQuery.of(context).size;
+      final deviceRatio = size2.width / size2.height;
+      return OverflowBox(maxHeight: double.infinity, child: Transform.scale(
+        scale: controller.value.aspectRatio / deviceRatio,
+        child: Center(
+          child: AspectRatio(
+            aspectRatio: controller.value.aspectRatio,
+            child: CameraPreview(controller),
+          ),
+    ),
+      ),
       );
     }
   }
@@ -248,7 +252,7 @@ class _CameraPageState extends State<CameraPage> {
     }
 
     try {
-      await controller.takePicture(filePath, maxSize: widget.maxSize);
+      await controller.takePicture(filePath/*, maxSize: widget.maxSize*/);
     } on CameraException catch (e) {
       _showCameraException(e);
       return null;
@@ -267,5 +271,32 @@ class _CameraPageState extends State<CameraPage> {
       showInSnackBar(
           '${AdvImagePicker.error} ${controller.value.errorDescription}');
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // App state changed before we got the chance to initialize.
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive) {
+      controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      if (controller != null) {
+        onNewCameraSelected(controller.description);
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 }

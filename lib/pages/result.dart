@@ -1,5 +1,6 @@
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
+import 'package:adv_image_picker/pages/preview.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_image_preview.dart';
@@ -32,7 +33,7 @@ class _ResultPageSate extends State<ResultPage> {
         body: Column(children: [
           Expanded(
               child: Container(
-                  child: AdvImagePreview(
+                  child: Preview(
             imageProviders: widget.images.map((ResultItem item) {
 //            return Image.memory(image.buffer.asUint8List(), fit: BoxFit.cover,);
               return MemoryImage(item.data.buffer.asUint8List());

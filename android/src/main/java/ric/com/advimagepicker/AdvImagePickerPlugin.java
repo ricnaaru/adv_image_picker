@@ -98,7 +98,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                         @Override
                         public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-
+                            token.continuePermissionRequest();
                         }
                     }).check();
         } else if (call.method.equals("getAlbums")) {

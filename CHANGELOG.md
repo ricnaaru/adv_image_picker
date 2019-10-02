@@ -1,3 +1,7 @@
+## 0.3.3
+
+* Fix onPermissionRationaleShouldBeShown to continue request permission
+
 ## 0.3.2
 
 * Fix terminated apps when used under Flutter 1.5.4

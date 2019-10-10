@@ -158,7 +158,7 @@ class _GalleryPageState extends State<GalleryPage> {
                 : albums.map((Album album) {
                     return DropdownMenuItem(child: Text("${album.name}"), value: album.name);
                   }).toList(),
-            value: albums == null ? "" : _selectedAlbum.name,
+            value: albums == null || _selectedAlbum == null ? "" : _selectedAlbum.name,
             onChanged: (albumName) {
               if (albumName == null || albums.length == 0) return;
 

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 
 void main() => runApp(MyApp());
 

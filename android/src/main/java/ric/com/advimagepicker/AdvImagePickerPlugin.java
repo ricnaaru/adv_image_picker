@@ -13,10 +13,16 @@ import android.provider.MediaStore;
 import android.util.Log;
 
 import com.karumi.dexter.Dexter;
+import com.karumi.dexter.DexterBuilder;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.DexterError;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.PermissionRequestErrorListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
+import com.karumi.dexter.listener.single.PermissionListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
@@ -32,13 +38,16 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
+
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
@@ -52,6 +61,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
     private MethodCall methodCall;
     private ThreadPoolExecutor mDecodeThreadPool;
     private Picasso picasso;
+    private int REQUEST_CODE_SINGLE_PERMISSION = 0;
 
     private AdvImagePickerPlugin(Registrar registrar) {
         this.activity = registrar.activity();
@@ -89,7 +99,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
     public void onMethodCall(MethodCall call, final Result result) {
         if (call.method.equals("getPermission")) {
             Dexter.withActivity(activity)
-                    .withPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
                     .withListener(new MultiplePermissionsListener() {
                         @Override
                         public void onPermissionsChecked(MultiplePermissionsReport report) {
@@ -100,7 +110,8 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                         public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
                             token.continuePermissionRequest();
                         }
-                    }).check();
+                    })
+                    .check();
         } else if (call.method.equals("getAlbums")) {
             Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
@@ -168,7 +179,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         } else if (call.method.equals("getAlbumOriginal")) {
             final String albumId = call.argument("albumId");
             final String assetId = call.argument("assetId");
-            final int maxSize = call.argument("maxSize") == null ? 0 : (int)(call.argument("maxSize"));
+            final int maxSize = call.argument("maxSize") == null ? 0 : (int) (call.argument("maxSize"));
             final int quality = call.argument("quality");
             GetImageTask task = new GetImageTask(this.messenger, albumId, assetId, quality, maxSize);
 
@@ -221,8 +232,8 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 if (maxSize != 0) {
                     double initialWidth = bitmap.getWidth();
                     double initialHeight = bitmap.getHeight();
-                    int width = initialHeight < initialWidth ? maxSize : (int)(initialWidth / initialHeight * maxSize);
-                    int height = initialWidth <= initialHeight ? maxSize : (int)(initialHeight / initialWidth * maxSize);
+                    int width = initialHeight < initialWidth ? maxSize : (int) (initialWidth / initialHeight * maxSize);
+                    int height = initialWidth <= initialHeight ? maxSize : (int) (initialHeight / initialWidth * maxSize);
                     bitmap = Bitmap.createScaledBitmap(bitmap, width,
                             height, true);
                 }

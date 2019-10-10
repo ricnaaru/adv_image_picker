@@ -39,7 +39,7 @@ class AdvImagePicker {
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
-
+      print("hasPermission => $hasPermission");
       if (!hasPermission) return null;
     }
 

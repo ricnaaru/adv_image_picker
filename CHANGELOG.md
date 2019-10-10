@@ -1,3 +1,8 @@
+## 1.0.0
+
+* [Breaking Change] try to upgrade to 1.9.1
+* Using new Camera
+
 ## 0.3.3
 
 * Fix onPermissionRationaleShouldBeShown to continue request permission

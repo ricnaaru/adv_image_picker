@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:adv_camera/adv_camera.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
@@ -27,6 +28,7 @@ class AdvImagePicker {
   static String confirm = "Confirm";
   static String cancel = "Cancel";
   static String loadingAssetName = "images/image_picker_loading.gif";
+  static FlashType defaultFlashType = FlashType.auto;
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,

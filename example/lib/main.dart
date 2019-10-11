@@ -36,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<File> files = [];
 
   void _pickImage() async {
-    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 1250));
+    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 150));
 
     setState(() {});
   }

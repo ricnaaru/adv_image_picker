@@ -39,6 +39,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   String imagePath;
   int _currentCameraIndex = 0;
   Completer<String> takePictureCompleter;
+  FlashType flashType = FlashType.auto;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -109,7 +110,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         elevation: 0.0,
         onPressed: () {
           takePicture().then((resultPath) async {
-            print("resultPath => $resultPath");
             if (resultPath == null) return;
             ByteData bytes = await _readFileByte(resultPath);
             Navigator.push(
@@ -133,34 +133,32 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   Future<ByteData> _readFileByte(String filePath) async {
     Uri myUri = Uri.parse(filePath);
-    File audioFile = new File.fromUri(myUri);
+    File imageFile = new File.fromUri(myUri);
     Uint8List bytes;
-    await audioFile.readAsBytes().then((value) {
+    await imageFile.readAsBytes().then((value) {
       bytes = Uint8List.fromList(value);
       print('reading of bytes is completed');
     }).catchError((onError) {
-      print('Exception Error while reading audio from path:' +
-          onError.toString());
+      print('Exception Error while reading audio from path:' + onError.toString());
     });
     return bytes.buffer.asByteData();
   }
 
   Widget _buildWidget(BuildContext context) {
     return AdvLoadingWithBarrier(
-        content: (BuildContext context) => _cameraPreviewWidget(),
+        content: (BuildContext context) => _cameraPreviewWidget(context),
         isProcessing: controller == null);
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).
-  Widget _cameraPreviewWidget() {
+  Widget _cameraPreviewWidget(BuildContext context) {
     return AdvCamera(
-      onCameraCreated: _onCameraCreated,
-      onImageCaptured: (String path) {
-        print("onImageCaptured => $path");
-        takePictureCompleter.complete(path);
-        print("after onImageCaptured");
-      },
-      cameraPreviewRatio: CameraPreviewRatio.r16_9,
+            onCameraCreated: _onCameraCreated,
+            onImageCaptured: (String path) {
+              takePictureCompleter.complete(path);
+              takePictureCompleter = null;
+            },
+            cameraPreviewRatio: CameraPreviewRatio.r16_9,
     );
   }
 
@@ -171,17 +169,15 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   }
 
   Future<String> takePicture() async {
-    if (controller == null) {
+    if (controller == null || takePictureCompleter != null) {
       return null;
     }
 
     takePictureCompleter = Completer<String>();
 
-    await controller.captureImage();
-    print("before takePicture");
-String s = await takePictureCompleter.future;
-    print("after takePicture $s");
-    return s;
+    await controller.captureImage(maxSize: widget.maxSize);
+
+    return await takePictureCompleter.future;
   }
 
   @override
@@ -206,8 +202,6 @@ String s = await takePictureCompleter.future;
       await controller.setSavePath(dirPath);
     });
 
-    setState(() {
-
-    });
+    setState(() {});
   }
 }

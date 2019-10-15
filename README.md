@@ -3,7 +3,7 @@
 This is our custom Image Picker that enabling you to multi pick image with our Custom UI
 
 *Note*: This plugin is still under development, and some Components might not be available yet or still has so many bugs.
-- We are using [photo_view](https://pub.dartlang.org/packages/photo_view), [path_provider](https://pub.dartlang.org/packages/path_provider), [camera](https://pub.dartlang.org/packages/camera) library too to support this image picker
+- Known bug, Flutter Native View will error when orientation changes
 
 ## Installation
 

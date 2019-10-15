@@ -40,12 +40,14 @@ class AdvImagePickerPlugin {
           quality, 'quality should be in range 0-100');
     }
 
-    BinaryMessages.setMessageHandler(
+    defaultBinaryMessenger.setMessageHandler(
         'adv_image_picker/image/fetch/thumbnails/$albumId/$assetId',
         (ByteData message) {
       callback(albumId, assetId, message);
-      BinaryMessages.setMessageHandler(
+      defaultBinaryMessenger.setMessageHandler(
           'adv_image_picker/image/fetch/thumbnails/$albumId/$assetId', null);
+
+      return null;
     });
 
     var thumbnails =
@@ -69,12 +71,14 @@ class AdvImagePickerPlugin {
           quality, 'quality should be in range 0-100');
     }
 
-    BinaryMessages.setMessageHandler(
+    defaultBinaryMessenger.setMessageHandler(
         'adv_image_picker/image/fetch/original/$albumId/$assetId',
         (ByteData message) {
       callback(albumId, assetId, message);
-      BinaryMessages.setMessageHandler(
+      defaultBinaryMessenger.setMessageHandler(
           'adv_image_picker/image/fetch/original/$albumId/$assetId', null);
+
+      return null;
     });
 
     Map<String, dynamic> param = <String, dynamic>{

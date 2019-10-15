@@ -1,3 +1,12 @@
+## 1.0.2
+
+* Fix Android force closed when select image from gallery
+
+## 1.0.1
+
+* Adding maxSize to pick image from camera
+* Some bug fixing
+
 ## 1.0.0
 
 * [Breaking Change] try to upgrade to 1.9.1

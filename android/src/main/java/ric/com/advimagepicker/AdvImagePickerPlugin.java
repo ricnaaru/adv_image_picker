@@ -12,17 +12,14 @@ import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.core.content.FileProvider;
+import androidx.exifinterface.media.ExifInterface;
+
 import com.karumi.dexter.Dexter;
-import com.karumi.dexter.DexterBuilder;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
-import com.karumi.dexter.listener.DexterError;
-import com.karumi.dexter.listener.PermissionDeniedResponse;
-import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
-import com.karumi.dexter.listener.PermissionRequestErrorListener;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-import com.karumi.dexter.listener.single.PermissionListener;
 import com.squareup.picasso.Picasso;
 
 import java.io.ByteArrayOutputStream;
@@ -38,16 +35,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.FileProvider;
-import androidx.exifinterface.media.ExifInterface;
-
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
@@ -195,7 +187,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         pendingResult = null;
     }
 
-    private class GetImageTask extends AsyncTask<String, Void, Void> {
+    private class GetImageTask extends AsyncTask<String, Void, ByteBuffer> {
         BinaryMessenger messenger;
         String albumId;
         String assetId;
@@ -212,7 +204,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         }
 
         @Override
-        protected Void doInBackground(String... strings) {
+        protected ByteBuffer doInBackground(String... strings) {
             File file = new File(this.assetId);
             String packageName = context.getPackageName();
 
@@ -269,12 +261,17 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
             assert bytesArray != null;
             final ByteBuffer buffer = ByteBuffer.allocateDirect(bytesArray.length);
             buffer.put(bytesArray);
+            return buffer;
+        }
+
+        @Override
+        protected void onPostExecute(ByteBuffer buffer) {
+            super.onPostExecute(buffer);
             this.messenger.send("adv_image_picker/image/fetch/original/" + albumId + "/" + assetId, buffer);
-            return null;
         }
     }
 
-    private class GetThumbnailTask extends AsyncTask<String, Void, Void> {
+    private class GetThumbnailTask extends AsyncTask<String, Void, ByteBuffer> {
         BinaryMessenger messenger;
         String albumId;
         String assetId;
@@ -293,7 +290,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         }
 
         @Override
-        protected Void doInBackground(String... strings) {
+        protected ByteBuffer doInBackground(String... strings) {
             File file = new File(this.assetId);
 
             String packageName = context.getPackageName();
@@ -341,16 +338,21 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 bitmap.recycle();
             } catch (IOException e) {
                 e.printStackTrace();
-                this.messenger.send("adv_image_picker/image/fetch/thumbnails/" + albumId + "/" + assetId, null);
             }
 
             if (byteArray != null) {
                 final ByteBuffer buffer = ByteBuffer.allocateDirect(byteArray.length);
                 buffer.put(byteArray);
-                this.messenger.send("adv_image_picker/image/fetch/thumbnails/" + albumId + "/" + assetId, buffer);
+                return buffer;
             }
 
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(ByteBuffer byteBuffer) {
+            super.onPostExecute(byteBuffer);
+            this.messenger.send("adv_image_picker/image/fetch/thumbnails/" + albumId + "/" + assetId, byteBuffer);
         }
     }
 

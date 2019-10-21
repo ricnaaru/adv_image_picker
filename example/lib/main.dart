@@ -1,10 +1,7 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 
 void main() => runApp(MyApp());
 
@@ -36,7 +33,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<File> files = [];
 
   void _pickImage() async {
-    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 150));
+    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 4080));
 
     setState(() {});
   }

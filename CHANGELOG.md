@@ -1,3 +1,11 @@
+## 1.0.4
+
+* Upgrade adv_camera version
+
+## 1.0.3
+
+* Change pit_components to basic_components
+
 ## 1.0.2
 
 * Fix Android force closed when select image from gallery

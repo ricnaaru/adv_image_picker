@@ -6,13 +6,14 @@ import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
+import 'package:basic_components/basic_components.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pit_components/pit_components.dart';
 
 class AdvImagePicker {
   static Color lightGrey = Color(0xffc6c6c6);
+  static Color selectedImagePreviewColor = Colors.orange;
   static Color primaryColor = Colors.green;
   static Color accentColor = Colors.blue;
   static int maxImage = 99;
@@ -37,7 +38,7 @@ class AdvImagePicker {
         int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
-    PitComponents.loadingAssetName = loadingAssetName;
+    BasicComponents.loading.assetName = loadingAssetName;
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
@@ -84,7 +85,7 @@ class AdvImagePicker {
       int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
-    PitComponents.loadingAssetName = loadingAssetName;
+    BasicComponents.loading.assetName = loadingAssetName;
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();

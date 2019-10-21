@@ -1,10 +1,10 @@
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/preview.dart';
+import 'package:basic_components/components/adv_button.dart';
+import 'package:basic_components/components/adv_column.dart';
+import 'package:basic_components/components/adv_row.dart';
 import 'package:flutter/material.dart';
-import 'package:pit_components/components/adv_button.dart';
-import 'package:pit_components/components/adv_image_preview.dart';
-import 'package:pit_components/components/adv_row.dart';
 
 class ResultPage extends StatefulWidget {
   final List<ResultItem> images;
@@ -56,31 +56,30 @@ class _ResultPageSate extends State<ResultPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Expanded(
-                      child: AdvButtonWithIcon(
-                        "${AdvImagePicker.cancel}",
-                        Icon(Icons.close),
-                        Axis.vertical,
+                      child: AdvButton.custom(
+                        child: AdvColumn(
+                            divider: ColumnDivider(4.0),
+                            children: [Text("${AdvImagePicker.cancel}"), Icon(Icons.close)]),
                         buttonSize: ButtonSize.small,
-                        backgroundColor: Colors.white,
-                        textColor: Colors.black87,
+                        primaryColor: Colors.white,
+                        accentColor: Colors.black87,
                         onPressed: () {
                           Navigator.pop(context);
                         },
                       ),
                     ),
                     Expanded(
-                      child: AdvButtonWithIcon(
-                        "${AdvImagePicker.confirm}",
-                        Icon(Icons.check),
-                        Axis.vertical,
+                      child: AdvButton.custom(
+                        child: AdvColumn(divider: ColumnDivider(4.0), children: [
+                          Text("${AdvImagePicker.confirm}"),
+                          Icon(Icons.check),
+                        ]),
                         buttonSize: ButtonSize.small,
-                        backgroundColor: Colors.white,
-                        textColor: AdvImagePicker.primaryColor,
+                        primaryColor: Colors.white,
+                        accentColor: AdvImagePicker.primaryColor,
                         onPressed: () {
-                          Navigator.popUntil(
-                              context, ModalRoute.withName("AdvImagePickerHome"));
-                          if (Navigator.canPop(context))
-                            Navigator.pop(context, widget.images);
+                          Navigator.popUntil(context, ModalRoute.withName("AdvImagePickerHome"));
+                          if (Navigator.canPop(context)) Navigator.pop(context, widget.images);
                         },
                       ),
                     ),

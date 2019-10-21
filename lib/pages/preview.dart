@@ -1,8 +1,8 @@
+import 'package:adv_image_picker/adv_image_picker.dart';
+import 'package:basic_components/components/adv_row.dart';
+import 'package:basic_components/components/adv_visibility.dart';
 import 'package:flutter/material.dart';
 import 'package:photo_view/photo_view.dart';
-import 'package:pit_components/components/adv_row.dart';
-import 'package:pit_components/components/adv_visibility.dart';
-import 'package:pit_components/pit_components.dart';
 
 class Preview extends StatefulWidget {
   final PreviewController controller;
@@ -83,7 +83,7 @@ class _PreviewState extends State<Preview> {
                   right: 0.0,
                   height: widget.height / 100,
                   child:
-                  Container(color: PitComponents.selectedImagePreviewColor),
+                  Container(color: AdvImagePicker.selectedImagePreviewColor),
                 ),
                 visibility: i == controller.currentImage
                     ? VisibilityFlag.visible

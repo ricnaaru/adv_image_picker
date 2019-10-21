@@ -4,14 +4,14 @@ import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/album_item.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/result.dart';
+import 'package:adv_image_picker/plugins/adv_future_builder.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
+import 'package:basic_components/components/adv_button.dart';
+import 'package:basic_components/components/adv_loading_with_barrier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:image_list/image_list.dart';
-import 'package:pit_components/components/adv_button.dart';
-import 'package:pit_components/components/adv_future_builder.dart';
-import 'package:pit_components/components/adv_loading_with_barrier.dart';
 
 class GalleryPage extends StatefulWidget {
   final bool allowMultiple;
@@ -317,7 +317,7 @@ class _SmartButtonState extends State<_SmartButton> {
   Widget build(BuildContext context) {
     return Container(
         padding: EdgeInsets.all(16.0),
-        child: AdvButton(
+        child: AdvButton.text(
           "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
           width: double.infinity,
           backgroundColor: AdvImagePicker.primaryColor,

@@ -7,13 +7,13 @@ import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/pages/result.dart';
+import 'package:basic_components/components/adv_button.dart';
+import 'package:basic_components/components/adv_column.dart';
+import 'package:basic_components/components/adv_loading_with_barrier.dart';
+import 'package:basic_components/components/adv_visibility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:pit_components/components/adv_button.dart';
-import 'package:pit_components/components/adv_future_builder.dart';
-import 'package:pit_components/components/adv_loading_with_barrier.dart';
-import 'package:pit_components/components/adv_visibility.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -64,13 +64,14 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AdvButtonWithIcon(
-                  AdvImagePicker.rotate,
-                  Icon(Icons.switch_camera),
-                  Axis.vertical,
+                AdvButton.custom(
+                  child: AdvColumn(divider: ColumnDivider(4.0), children: [
+                    Text(AdvImagePicker.rotate),
+                    Icon(Icons.switch_camera),
+                  ]),
                   buttonSize: ButtonSize.small,
-                  backgroundColor: Colors.white,
-                  textColor: Colors.black87,
+                  primaryColor: Colors.white,
+                  accentColor: Colors.black87,
                   onPressed: () {
                     controller.switchCamera();
                   },
@@ -84,13 +85,14 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                 AdvVisibility(
                   visibility:
                       widget.enableGallery ? VisibilityFlag.visible : VisibilityFlag.invisible,
-                  child: AdvButtonWithIcon(
-                    AdvImagePicker.gallery,
-                    Icon(Icons.photo_album),
-                    Axis.vertical,
+                  child: AdvButton.custom(
+                    child: AdvColumn(divider: ColumnDivider(4.0), children: [
+                      Text(AdvImagePicker.gallery),
+                      Icon(Icons.photo_album),
+                    ]),
                     buttonSize: ButtonSize.small,
-                    backgroundColor: Colors.white,
-                    textColor: Colors.black87,
+                    primaryColor: Colors.white,
+                    accentColor: Colors.black87,
                     onPressed: () {
                       Navigator.push(
                           context,
@@ -153,12 +155,12 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   /// Display the preview from the camera (or a message if the preview is not available).
   Widget _cameraPreviewWidget(BuildContext context) {
     return AdvCamera(
-            onCameraCreated: _onCameraCreated,
-            onImageCaptured: (String path) {
-              takePictureCompleter.complete(path);
-              takePictureCompleter = null;
-            },
-            cameraPreviewRatio: CameraPreviewRatio.r16_9,
+      onCameraCreated: _onCameraCreated,
+      onImageCaptured: (String path) {
+        takePictureCompleter.complete(path);
+        takePictureCompleter = null;
+      },
+      cameraPreviewRatio: CameraPreviewRatio.r16_9,
     );
   }
 

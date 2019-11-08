@@ -1,3 +1,12 @@
+## 1.0.4+2
+
+* Fix dependency with the latest basic components
+
+## 1.0.4+1
+
+* Fix iOS target size that cause PHImageResultIsDegradedKey
+* Handle iOS permission request before open page
+
 ## 1.0.4
 
 * Upgrade adv_camera version

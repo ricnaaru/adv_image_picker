@@ -4,9 +4,11 @@ import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
 import 'package:adv_image_picker/adv_image_picker.dart';
+import 'package:adv_image_picker/components/toast.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/pages/result.dart';
+import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:basic_components/components/adv_button.dart';
 import 'package:basic_components/components/adv_column.dart';
 import 'package:basic_components/components/adv_loading_with_barrier.dart';
@@ -93,14 +95,18 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
                     buttonSize: ButtonSize.small,
                     primaryColor: Colors.white,
                     accentColor: Colors.black87,
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (BuildContext context) => GalleryPage(
-                                    allowMultiple: widget.allowMultiple,
-                                    maxSize: widget.maxSize,
-                                  )));
+                    onPressed: () async {
+                      if (Platform.isIOS) {
+                        bool hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
+                        if (!hasPermission) {
+                          Toast.showToast(context, "Permission denied");
+                          return null;
+                        } else {
+                          goToGallery();
+                        }
+                      } else {
+                        goToGallery();
+                      }
                     },
                   ),
                 ),
@@ -144,6 +150,17 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
       print('Exception Error while reading audio from path:' + onError.toString());
     });
     return bytes.buffer.asByteData();
+  }
+
+  goToGallery() {
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) =>
+                GalleryPage(
+                  allowMultiple: widget.allowMultiple,
+                  maxSize: widget.maxSize,
+                )));
   }
 
   Widget _buildWidget(BuildContext context) {

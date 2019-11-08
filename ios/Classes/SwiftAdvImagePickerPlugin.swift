@@ -40,6 +40,12 @@ public class SwiftAdvImagePickerPlugin: NSObject, FlutterPlugin {
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch (call.method) {
+        case "getIosCameraPermission":
+            getCameraPermission(result: result)
+            break;
+        case "getIosStoragePermission":
+            getStoragePermission(result: result)
+            break;
         case "getAlbums":
 //            let vs = BSImagePickerViewController();
 //
@@ -236,9 +242,10 @@ public class SwiftAdvImagePickerPlugin: NSObject, FlutterPlugin {
                 if object is PHAsset{
                     let asset = object as! PHAsset
                     
+                    let targetSize = CGSize(width:asset.pixelWidth, height:asset.pixelHeight)
                     let ID: PHImageRequestID = manager.requestImage(
                         for: asset,
-                        targetSize: PHImageManagerMaximumSize,
+                        targetSize: targetSize,
                         contentMode: PHImageContentMode.aspectFill,
                         options: options,
                         resultHandler: {
@@ -277,5 +284,51 @@ public class SwiftAdvImagePickerPlugin: NSObject, FlutterPlugin {
         default:
             result(FlutterMethodNotImplemented)
         }
+    }
+    
+    
+    private func getCameraPermission(result: @escaping FlutterResult)-> Void {
+        let hasPermission = checkPermission(permission: "Camera")
+        if (!hasPermission) {
+            AVCaptureDevice.requestAccess(for: AVMediaType.video) { granted in
+                if granted {
+                    result(true)
+                } else {
+                    result(false)
+                }
+            }
+        } else {
+            result(true)
+        }
+    }
+    
+    private func getStoragePermission(result: @escaping FlutterResult) -> Void {
+        let hasPermission = checkPermission(permission: "Storage")
+        if(!hasPermission) {
+            PHPhotoLibrary.requestAuthorization { status in
+                switch status {
+                case .authorized:
+                    result(true)
+                    break;
+                default:
+                    result(false)
+                    break;
+                }
+            }
+        } else {
+            result(true)
+        }
+    }
+    
+    private func checkPermission(permission : String) -> Bool {
+        var hasPermission: Bool!
+        if permission == "Storage" {
+            let status = PHPhotoLibrary.authorizationStatus()
+            hasPermission = status == PHAuthorizationStatus.authorized
+        } else if (permission == "Camera"){
+            let status = AVCaptureDevice.authorizationStatus(for: .video)
+            hasPermission = status == AVAuthorizationStatus.authorized
+        }
+        return hasPermission
     }
 }

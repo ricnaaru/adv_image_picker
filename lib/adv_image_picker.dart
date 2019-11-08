@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:adv_camera/adv_camera.dart';
+import 'package:adv_image_picker/components/toast.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
@@ -44,6 +45,19 @@ class AdvImagePicker {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
       print("hasPermission => $hasPermission");
       if (!hasPermission) return null;
+    }
+
+    if (Platform.isIOS) {
+      bool hasPermission = false;
+      if (usingCamera) {
+        hasPermission = await AdvImagePickerPlugin.getIosCameraPermission();
+      } else {
+        hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
+      }
+      if (!hasPermission) {
+        Toast.showToast(context, "Permission denied");
+        return null;
+      }
     }
 
     Widget advImagePickerHome = usingCamera
@@ -91,6 +105,19 @@ class AdvImagePicker {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
 
       if (!hasPermission) return null;
+    }
+
+    if (Platform.isIOS) {
+      bool hasPermission = false;
+      if (usingCamera) {
+        hasPermission = await AdvImagePickerPlugin.getIosCameraPermission();
+      } else {
+        hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
+      }
+      if (!hasPermission) {
+        Toast.showToast(context, "Permission denied");
+        return null;
+      }
     }
 
     Widget advImagePickerHome = usingCamera

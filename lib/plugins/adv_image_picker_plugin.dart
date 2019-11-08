@@ -7,6 +7,16 @@ import 'package:flutter/services.dart';
 class AdvImagePickerPlugin {
   static const MethodChannel _channel = const MethodChannel('adv_image_picker');
 
+  static Future<bool> getIosCameraPermission() async {
+    bool result = await _channel.invokeMethod("getIosCameraPermission");
+    return result;
+  }
+
+  static Future<bool> getIosStoragePermission() async {
+    bool result = await _channel.invokeMethod("getIosStoragePermission");
+    return result;
+  }
+
   static Future<bool> getPermission() async {
     return await _channel.invokeMethod('getPermission');
   }

@@ -1,3 +1,7 @@
+## 1.0.5
+
+* Fix dependency with the latest basic components
+
 ## 1.0.4+2
 
 * Fix dependency with the latest basic components

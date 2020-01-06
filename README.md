@@ -1,57 +1,17 @@
 # Advanced Image Picker
 
-This is our custom Image Picker that enabling you to multi pick image with our Custom UI
+This is my custom Image Picker that enabling you to multiple pick image and [Adv Camera](https://pub.dev/packages/adv_camera) with our Custom UI
 
 *Note*: This plugin is still under development, and some Components might not be available yet or still has so many bugs.
-- Known bug, Flutter Native View will error when orientation changes
 
 ## Installation
 
 First, add `adv_image_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
 
 ```
-adv_image_picker: ^0.2.1
+adv_image_picker: ^1.0.6
 ```
 
 ## Example
-```
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
 
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  List<File> files = [];
-
-  void _pickImage() async {
-    files.addAll(await AdvImagePicker.pickImagesToFile(context));
-
-    setState(() {
-
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: GridView.count(crossAxisCount: 4,
-          children: files.map((File f) => Image.file(f, fit: BoxFit.cover,)).toList(),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickImage,
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-}
-```
+You can find the full example, [here](https://github.com/ricnaaru/adv_image_picker/blob/master/example/lib/main.dart)

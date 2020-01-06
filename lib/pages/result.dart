@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/preview.dart';
@@ -35,8 +37,9 @@ class _ResultPageSate extends State<ResultPage> {
               child: Container(
                   child: Preview(
             imageProviders: widget.images.map((ResultItem item) {
+              return FileImage(File(item.filePath));
 //            return Image.memory(image.buffer.asUint8List(), fit: BoxFit.cover,);
-              return MemoryImage(item.data.buffer.asUint8List());
+//              return MemoryImage(item.data.buffer.asUint8List());
 //            return ClipRect(
 //              child: PhotoView(
 //                imageProvider: MemoryImage(image.buffer.asUint8List()),
@@ -59,7 +62,10 @@ class _ResultPageSate extends State<ResultPage> {
                       child: AdvButton.custom(
                         child: AdvColumn(
                             divider: ColumnDivider(4.0),
-                            children: [Text("${AdvImagePicker.cancel}"), Icon(Icons.close)]),
+                            children: [
+                              Text("${AdvImagePicker.cancel}"),
+                              Icon(Icons.close)
+                            ]),
                         buttonSize: ButtonSize.small,
                         primaryColor: Colors.white,
                         accentColor: Colors.black87,
@@ -70,7 +76,8 @@ class _ResultPageSate extends State<ResultPage> {
                     ),
                     Expanded(
                       child: AdvButton.custom(
-                        child: AdvColumn(divider: ColumnDivider(4.0), children: [
+                        child:
+                            AdvColumn(divider: ColumnDivider(4.0), children: [
                           Text("${AdvImagePicker.confirm}"),
                           Icon(Icons.check),
                         ]),
@@ -78,8 +85,10 @@ class _ResultPageSate extends State<ResultPage> {
                         primaryColor: Colors.white,
                         accentColor: AdvImagePicker.primaryColor,
                         onPressed: () {
-                          Navigator.popUntil(context, ModalRoute.withName("AdvImagePickerHome"));
-                          if (Navigator.canPop(context)) Navigator.pop(context, widget.images);
+                          Navigator.popUntil(context,
+                              ModalRoute.withName("AdvImagePickerHome"));
+                          if (Navigator.canPop(context))
+                            Navigator.pop(context, widget.images);
                         },
                       ),
                     ),

@@ -1,3 +1,10 @@
+## 1.0.6
+
+* Add barrier when camera take picture and barrier when gallery is processing the files
+* Change dependency of basic_components, adv_camera
+* Change the way result page load the selected image into fileImage instead of MemoryImage
+* Add Flash feature to example
+
 ## 1.0.5
 
 * Fix dependency with the latest basic components

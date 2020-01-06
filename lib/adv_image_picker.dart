@@ -2,12 +2,12 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:adv_camera/adv_camera.dart';
-import 'package:adv_image_picker/components/toast.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:basic_components/basic_components.dart';
+import 'package:basic_components/utilities/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,20 +30,24 @@ class AdvImagePicker {
   static String confirm = "Confirm";
   static String cancel = "Cancel";
   static String loadingAssetName = "images/image_picker_loading.gif";
+  static String cameraSavePath;
+  static String cameraFolderName =
+      "images"; //only used if you dont specify [AdvImagePicker.cameraSavePath]
+  static String cameraFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
-        bool allowMultiple = true,
-        int maxSize}) async {
+      bool allowMultiple = true,
+      int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
     BasicComponents.loading.assetName = loadingAssetName;
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
-      print("hasPermission => $hasPermission");
+
       if (!hasPermission) return null;
     }
 
@@ -61,7 +65,10 @@ class AdvImagePicker {
     }
 
     Widget advImagePickerHome = usingCamera
-        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple, maxSize: maxSize)
+        ? CameraPage(
+            enableGallery: usingGallery,
+            allowMultiple: allowMultiple,
+            maxSize: maxSize)
         : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
     List<File> files = [];
@@ -121,7 +128,10 @@ class AdvImagePicker {
     }
 
     Widget advImagePickerHome = usingCamera
-        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple, maxSize: maxSize)
+        ? CameraPage(
+            enableGallery: usingGallery,
+            allowMultiple: allowMultiple,
+            maxSize: maxSize)
         : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
     List<ByteData> datas = [];
@@ -142,4 +152,16 @@ class AdvImagePicker {
 
   static String _timestamp() =>
       DateTime.now().millisecondsSinceEpoch.toString();
+
+  static Future<Directory> getDefaultDirectoryForCamera() async {
+    Directory extDir;
+
+    if (Platform.isIOS) {
+      extDir = await getApplicationDocumentsDirectory();
+    } else if (Platform.isAndroid) {
+      extDir = await getExternalStorageDirectory();
+    }
+
+    return extDir;
+  }
 }

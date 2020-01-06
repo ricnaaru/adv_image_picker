@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
+import 'package:adv_image_picker/components/adv_state.dart';
 import 'package:adv_image_picker/models/album_item.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_future_builder.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:basic_components/components/adv_button.dart';
-import 'package:basic_components/components/adv_loading_with_barrier.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -25,7 +25,7 @@ class GalleryPage extends StatefulWidget {
   _GalleryPageState createState() => new _GalleryPageState();
 }
 
-class _GalleryPageState extends State<GalleryPage> {
+class _GalleryPageState extends AdvState<GalleryPage> {
   List<Album> albums;
   int _selectedImageCount = 0;
   List<int> rows = [];
@@ -37,7 +37,6 @@ class _GalleryPageState extends State<GalleryPage> {
   int batchCounter = 0;
   ImageListController _controller;
   bool _multipleMode = false;
-  bool _processing = false;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ValueNotifier<int> buttonController = ValueNotifier<int>(0);
 
@@ -60,17 +59,18 @@ class _GalleryPageState extends State<GalleryPage> {
       }).toList();
     } on PlatformException catch (e) {
       if (_scaffoldKey.currentState.mounted)
-        _scaffoldKey.currentState?.showSnackBar(SnackBar(content: Text(e.message)));
+        _scaffoldKey.currentState
+            ?.showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
   toggleMultipleMode() {
+    if (_controller == null || albums == null) return;
+
     if (!_multipleMode) {
       _scaffoldKey.currentState
           .showBottomSheet((BuildContext context) {
             return _SmartButton(buttonController, onPressed: () async {
-              if (_processing) return;
-
               await submit();
             });
           })
@@ -84,36 +84,40 @@ class _GalleryPageState extends State<GalleryPage> {
     }
   }
 
-  submit() async {
-    setState(() {
-      _processing = true;
+  submit() {
+    Completer completer = Completer();
+    process(() async {
+      List<ResultItem> images = [];
+
+      List<ImageData> imageData = await _controller.getSelectedImage();
+
+      for (ImageData data in imageData) {
+        images.add(ResultItem(data.albumId, data.assetId));
+
+        AdvImagePickerPlugin.getAlbumOriginal(data.albumId, data.assetId, 100,
+                (albumId, assetId, data) {
+              images
+                  .firstWhere((ResultItem loopItem) =>
+              loopItem.albumId == albumId && loopItem.filePath == assetId)
+                  .data = data;
+
+              precacheImage(
+                  MemoryImage((data as ByteData).buffer.asUint8List()), context);
+
+              if (images
+                  .where((ResultItem loopItem) => loopItem.data != null)
+                  .length ==
+                  _selectedImageCount) {
+                completer.complete();
+                var page = ResultPage(images);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (BuildContext context) => page));
+              }
+            }, maxSize: widget.maxSize);
+      }
+
+      await completer.future;
     });
-
-    List<ResultItem> images = [];
-
-    List<ImageData> imageData = await _controller.getSelectedImage();
-
-    for (ImageData data in imageData) {
-      images.add(ResultItem(data.albumId, data.assetId));
-
-      AdvImagePickerPlugin.getAlbumOriginal(data.albumId, data.assetId, 100,
-          (albumId, assetId, data) {
-        images
-            .firstWhere((ResultItem loopItem) =>
-                loopItem.albumId == albumId && loopItem.filePath == assetId)
-            .data = data;
-
-        if (images.where((ResultItem loopItem) => loopItem.data != null).length ==
-            _selectedImageCount) {
-          setState(() {
-            _processing = false;
-          });
-
-          var page = ResultPage(images);
-          Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) => page));
-        }
-      }, maxSize: widget.maxSize);
-    }
   }
 
   switchMultipleMode() {
@@ -130,7 +134,7 @@ class _GalleryPageState extends State<GalleryPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildView(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: new AppBar(
@@ -156,25 +160,26 @@ class _GalleryPageState extends State<GalleryPage> {
             items: albums == null || albums.length == 0
                 ? [DropdownMenuItem(child: Text(""), value: "")]
                 : albums.map((Album album) {
-                    return DropdownMenuItem(child: Text("${album.name}"), value: album.name);
+                    return DropdownMenuItem(
+                        child: Text("${album.name}"), value: album.name);
                   }).toList(),
-            value: albums == null || _selectedAlbum == null ? "" : _selectedAlbum.name,
+            value: albums == null || _selectedAlbum == null
+                ? ""
+                : _selectedAlbum.name,
             onChanged: (albumName) {
               if (albumName == null || albums.length == 0) return;
 
               setState(() {
-                _selectedAlbum = albums.firstWhere((Album album) => album.name == albumName);
+                _selectedAlbum =
+                    albums.firstWhere((Album album) => album.name == albumName);
               });
 
               _controller.reloadAlbum(_selectedAlbum.identifier);
             }),
       ),
-      body: AdvLoadingWithBarrier(
-        isProcessing: _processing,
-        content: (BuildContext context) => AdvFutureBuilder(
-              futureExecutor: _loadAll,
-              widgetBuilder: _buildWidget,
-            ),
+      body: AdvFutureBuilder(
+        futureExecutor: _loadAll,
+        widgetBuilder: _buildWidget,
       ),
     );
   }
@@ -263,8 +268,8 @@ class TaskManager {
   }
 
   void remove(LoadItem item) {
-    items.removeWhere(
-        (loopItem) => loopItem.albumId == item.albumId && loopItem.assetId == item.assetId);
+    items.removeWhere((loopItem) =>
+        loopItem.albumId == item.albumId && loopItem.assetId == item.assetId);
   }
 
   _tryRender(LoadItem item) {

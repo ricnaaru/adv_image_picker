@@ -32,6 +32,16 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   List<File> files = [];
 
+
+  @override
+  void initState() {
+    super.initState();
+
+    AdvImagePicker.cameraFolderName = "Camera Folder";
+    AdvImagePicker.cameraFilePrefixName = "CameraTestingPrefixName_";
+    AdvImagePicker.cameraSavePath = "/storage/emulated/0/CameraTestingFolder/";
+  }
+
   void _pickImage() async {
     files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 4080));
 

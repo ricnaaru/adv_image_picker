@@ -1,6 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI
-version: 1.0.5
+version: 1.0.6
 author: Richardo <richardothayeb@gmail.com>
 homepage: https://github.com/ricnaaru/adv_image_picker
 
@@ -11,8 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
 
-  basic_components: ^1.0.0
-  adv_camera: ^0.0.6
+  basic_components: ^1.0.0+6
+  adv_camera: ^1.0.0+1
 #  camera:
 #    git:
 #      url: git://github.com/ricnaaru/plugins.git

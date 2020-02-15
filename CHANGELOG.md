@@ -1,3 +1,7 @@
+## 1.0.7
+
+* Fix dependency with the latest basic components
+
 ## 1.0.6
 
 * Add barrier when camera take picture and barrier when gallery is processing the files

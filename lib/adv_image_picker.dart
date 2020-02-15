@@ -43,8 +43,6 @@ class AdvImagePicker {
       int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
 
-    BasicComponents.loading.assetName = loadingAssetName;
-
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();
 
@@ -105,8 +103,6 @@ class AdvImagePicker {
       bool allowMultiple = true,
       int maxSize}) async {
     assert(usingCamera != false || usingGallery != false);
-
-    BasicComponents.loading.assetName = loadingAssetName;
 
     if (Platform.isAndroid) {
       bool hasPermission = await AdvImagePickerPlugin.getPermission();

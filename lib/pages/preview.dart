@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:adv_image_picker/adv_image_picker.dart';
+import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:basic_components/components/adv_row.dart';
 import 'package:basic_components/components/adv_visibility.dart';
 import 'package:flutter/material.dart';
@@ -10,56 +14,90 @@ class Preview extends StatefulWidget {
 
   Preview(
       {double height,
-        int currentImage,
-        List<ImageProvider> imageProviders,
-        PreviewController controller})
-      : assert(controller == null ||
-      (currentImage == null && imageProviders == null)),
+      int currentImage,
+      List<String> imagesPath,
+      PreviewController controller})
+      : assert(
+            controller == null || (currentImage == null && imagesPath == null)),
         this.height = height ?? 250.0,
         this.controller = controller ??
             PreviewController(
-                currentImage: currentImage ?? 0,
-                imageProviders: imageProviders ?? const []);
+              currentImage: currentImage ?? 0,
+              filesPath: imagesPath ?? const [],
+            );
 
   @override
   _PreviewState createState() => new _PreviewState();
 }
 
 class _PreviewState extends State<Preview> {
+  List<ImageProvider> thumbnails;
+  List<String> lastFilesPath;
+  ImageProvider lastPhoto;
+
   @override
   void initState() {
     super.initState();
 
+    lastFilesPath = widget.controller.filesPath;
+    prepare();
+
     widget.controller.addListener(() {
-      setState(() {});
+      if (lastFilesPath != widget.controller.filesPath) prepare();
+
+      lastFilesPath = widget.controller.filesPath;
     });
+  }
+
+  @override
+  void dispose() {
+    if ((thumbnails?.length ?? 0) > 0) {
+      for (ImageProvider each in thumbnails) {
+        each.evict();
+      }
+    }
+
+    if (lastPhoto != null)
+      lastPhoto.evict();
+
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> children = [];
+
+    if (thumbnails == null) {
+      return Center(child: CircularProgressIndicator());
+    }
+
     final PreviewController controller = widget.controller;
+    String selectedPath =
+        widget.controller.filesPath[widget.controller.currentImage];
+    File selectedFile = File(selectedPath);
+    Uint8List selectedImage = selectedFile.readAsBytesSync();
+    lastPhoto = MemoryImage(selectedImage);
 
-    children.add(Expanded(
-        child: ClipRect(
-          child: PhotoView(
-            backgroundDecoration: BoxDecoration(
-                color: Colors.black.withBlue(60).withGreen(60).withRed(60)),
-            imageProvider:
-            widget.controller.imageProviders[widget.controller.currentImage],
-            maxScale: PhotoViewComputedScale.covered * 2.0,
-            minScale: PhotoViewComputedScale.contained * 0.8,
-            initialScale: PhotoViewComputedScale.covered,
-          ),
-        )));
+    children.add(
+      Expanded(
+        child: PhotoView(
+          backgroundDecoration: BoxDecoration(
+              color: Colors.black.withBlue(60).withGreen(60).withRed(60)),
+          imageProvider: lastPhoto,
+          maxScale: PhotoViewComputedScale.covered * 2.0,
+          minScale: PhotoViewComputedScale.contained * 0.8,
+          initialScale: PhotoViewComputedScale.covered,
+        ),
+      ),
+    );
 
-    if (controller.imageProviders.length > 1) {
-      List<Widget> thumbnails = [];
+    if (controller.filesPath.length > 1) {
+      List<Widget> thumbnailWidgets = [];
 
-      for (int i = 0; i < controller.imageProviders.length; i++) {
+      for (int i = 0; i < thumbnails.length; i++) {
         Widget image = Container(
           child: Image(
-            image: controller.imageProviders[i],
+            image: thumbnails[i],
             fit: BoxFit.cover,
           ),
           color: Colors.black,
@@ -67,28 +105,33 @@ class _PreviewState extends State<Preview> {
           width: widget.height / 5,
         );
 
-        thumbnails.add(InkWell(
+        thumbnailWidgets.add(
+          InkWell(
             onTap: () {
               setState(() {
                 controller.currentImage = i;
               });
             },
-            child: Stack(children: [
-              image,
-              AdvVisibility(
-                child: Positioned(
-                  bottom: 0.0,
-                  left: 0.0,
-                  right: 0.0,
-                  height: widget.height / 100,
-                  child:
-                  Container(color: AdvImagePicker.selectedImagePreviewColor),
+            child: Stack(
+              children: [
+                image,
+                AdvVisibility(
+                  child: Positioned(
+                    bottom: 0.0,
+                    left: 0.0,
+                    right: 0.0,
+                    height: widget.height / 100,
+                    child: Container(
+                        color: AdvImagePicker.selectedImagePreviewColor),
+                  ),
+                  visibility: i == controller.currentImage
+                      ? VisibilityFlag.visible
+                      : VisibilityFlag.gone,
                 ),
-                visibility: i == controller.currentImage
-                    ? VisibilityFlag.visible
-                    : VisibilityFlag.gone,
-              )
-            ])));
+              ],
+            ),
+          ),
+        );
       }
 
       Widget rowOfThumbnails = SingleChildScrollView(
@@ -98,44 +141,68 @@ class _PreviewState extends State<Preview> {
               mainAxisAlignment: MainAxisAlignment.start,
               padding: EdgeInsets.symmetric(vertical: 4.0),
               divider: RowDivider(4.0),
-              children: thumbnails));
+              children: thumbnailWidgets));
 
       children.add(rowOfThumbnails);
     }
 
     return Container(
-        width: double.infinity,
-        height: widget.height,
-        child: Column(
-          children: children,
-          mainAxisSize: MainAxisSize.max,
-        ),
-        color: Colors.black.withBlue(30).withGreen(30).withRed(30));
+      width: double.infinity,
+      height: widget.height,
+      child: Column(
+        children: children,
+        mainAxisSize: MainAxisSize.max,
+      ),
+      color: Colors.black.withBlue(30).withGreen(30).withRed(30),
+    );
+  }
+
+  Future<void> prepare() async {
+    List<ImageProvider> thumbnails = [];
+
+    final PreviewController controller = widget.controller;
+
+    if (controller.filesPath.length > 1) {
+      for (int i = 0; i < controller.filesPath.length; i++) {
+        String path = widget.controller.filesPath[i];
+        ByteData data = await AdvImagePickerPlugin.getAlbumThumbnail(
+          imagePath: path,
+          height: widget.height ~/ 5,
+          width: widget.height ~/ 5,
+        );
+
+        Uint8List imageData = data.buffer.asUint8List();
+
+        thumbnails.add(MemoryImage(imageData));
+      }
+    }
+
+    this.thumbnails = thumbnails;
+
+    if (this.mounted) setState(() {});
   }
 }
 
-class PreviewController
-    extends ValueNotifier<PreviewEditingValue> {
+class PreviewController extends ValueNotifier<PreviewEditingValue> {
   int get currentImage => value.currentImage;
 
   set currentImage(int newCurrentImage) {
     value = value.copyWith(
-        currentImage: newCurrentImage, imageProviders: this.imageProviders);
+        currentImage: newCurrentImage, filesPath: this.filesPath);
   }
 
-  List<ImageProvider> get imageProviders => value.imageProviders;
+  List<String> get filesPath => value.filesPath;
 
-  set imageProviders(List<ImageProvider> newImageProviders) {
+  set filesPath(List<String> newFilesPath) {
     value = value.copyWith(
-        currentImage: this.currentImage, imageProviders: newImageProviders);
+        currentImage: this.currentImage, filesPath: newFilesPath);
   }
 
-  PreviewController(
-      {int currentImage, List<ImageProvider> imageProviders})
-      : super(currentImage == null && imageProviders == null
-      ? PreviewEditingValue.empty
-      : new PreviewEditingValue(
-      currentImage: currentImage, imageProviders: imageProviders));
+  PreviewController({int currentImage, List<String> filesPath})
+      : super(currentImage == null && filesPath == null
+            ? PreviewEditingValue.empty
+            : new PreviewEditingValue(
+                currentImage: currentImage, filesPath: filesPath));
 
   PreviewController.fromValue(PreviewEditingValue value)
       : super(value ?? PreviewEditingValue.empty);
@@ -148,30 +215,28 @@ class PreviewController
 @immutable
 class PreviewEditingValue {
   const PreviewEditingValue(
-      {int currentImage, List<ImageProvider> imageProviders = const []})
+      {int currentImage, List<String> filesPath = const []})
       : this.currentImage = currentImage ?? 0,
-        this.imageProviders = imageProviders ?? const [];
+        this.filesPath = filesPath ?? const [];
 
   final int currentImage;
-  final List<ImageProvider> imageProviders;
+  final List<String> filesPath;
 
-  static const PreviewEditingValue empty =
-  const PreviewEditingValue();
+  static const PreviewEditingValue empty = const PreviewEditingValue();
 
-  PreviewEditingValue copyWith(
-      {int currentImage, List<ImageProvider> imageProviders}) {
+  PreviewEditingValue copyWith({int currentImage, List<String> filesPath}) {
     return new PreviewEditingValue(
         currentImage: currentImage ?? this.currentImage,
-        imageProviders: imageProviders ?? this.imageProviders);
+        filesPath: filesPath ?? this.filesPath);
   }
 
   PreviewEditingValue.fromValue(PreviewEditingValue copy)
       : this.currentImage = copy.currentImage,
-        this.imageProviders = copy.imageProviders;
+        this.filesPath = copy.filesPath;
 
   @override
   String toString() => '$runtimeType(currentImage: \u2524$currentImage\u251C, '
-      'imageProviders: \u2524$imageProviders\u251C)';
+      'filesPath: \u2524$filesPath\u251C)';
 
   @override
   bool operator ==(dynamic other) {
@@ -179,10 +244,9 @@ class PreviewEditingValue {
     if (other is! PreviewEditingValue) return false;
     final PreviewEditingValue typedOther = other;
     return typedOther.currentImage == currentImage &&
-        typedOther.imageProviders == imageProviders;
+        typedOther.filesPath == filesPath;
   }
 
   @override
-  int get hashCode =>
-      hashValues(currentImage.hashCode, imageProviders.hashCode);
+  int get hashCode => hashValues(currentImage.hashCode, filesPath.hashCode);
 }

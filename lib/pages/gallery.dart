@@ -27,7 +27,6 @@ class GalleryPage extends StatefulWidget {
 
 class _GalleryPageState extends AdvState<GalleryPage> {
   List<Album> albums;
-  int _selectedImageCount = 0;
   List<int> rows = [];
   List<String> needToBeRendered = [];
   Album _selectedAlbum;
@@ -85,7 +84,6 @@ class _GalleryPageState extends AdvState<GalleryPage> {
   }
 
   submit() {
-    Completer completer = Completer();
     process(() async {
       List<ResultItem> images = [];
 
@@ -93,36 +91,17 @@ class _GalleryPageState extends AdvState<GalleryPage> {
 
       for (ImageData data in imageData) {
         images.add(ResultItem(data.albumId, data.assetId));
-
-        AdvImagePickerPlugin.getAlbumOriginal(data.albumId, data.assetId, 100,
-                (albumId, assetId, data) {
-              images
-                  .firstWhere((ResultItem loopItem) =>
-              loopItem.albumId == albumId && loopItem.filePath == assetId)
-                  .data = data;
-
-              precacheImage(
-                  MemoryImage((data as ByteData).buffer.asUint8List()), context);
-
-              if (images
-                  .where((ResultItem loopItem) => loopItem.data != null)
-                  .length ==
-                  _selectedImageCount) {
-                completer.complete();
-                var page = ResultPage(images);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (BuildContext context) => page));
-              }
-            }, maxSize: widget.maxSize);
       }
 
-      await completer.future;
+      var page = ResultPage(images);
+
+      Navigator.push(context,
+          MaterialPageRoute(builder: (BuildContext context) => page));
     });
   }
 
   switchMultipleMode() {
     if (mounted) {
-      _selectedImageCount = 0;
       buttonController.value = 0;
 
       setState(() {
@@ -218,8 +197,6 @@ class _GalleryPageState extends AdvState<GalleryPage> {
   }
 
   void _onImageTapped(int count) {
-    _selectedImageCount = count;
-
     if (!_multipleMode) {
       submit();
       return;
@@ -228,74 +205,6 @@ class _GalleryPageState extends AdvState<GalleryPage> {
     setState(() {
       buttonController.value = count;
     });
-  }
-}
-
-class LoadItem {
-  final double batchId;
-  final int index;
-  final String albumId;
-  final String assetId;
-
-  LoadItem(this.batchId, this.index, this.albumId, this.assetId);
-}
-
-class TaskManager {
-  List<LoadItem> items = [];
-  int counter = 0;
-  int maxCounter = 1;
-  final int width;
-  final int height;
-  final int quality;
-  final Function thumbnailListener;
-  String renderingItems = "";
-
-  TaskManager(this.width, this.height, this.quality, {this.thumbnailListener});
-
-  void add(List<LoadItem> loadItems) {
-    for (LoadItem i in loadItems) remove(LoadItem(0, 0, i.albumId, i.assetId));
-
-    items.addAll(loadItems);
-    LoadItem idleBatch = items.lastWhere(
-        (loopItem) => renderingItems.indexOf("[${loopItem.assetId}]") == -1,
-        orElse: () => null);
-
-    if (counter < maxCounter && idleBatch != null) {
-      counter++;
-      renderingItems += "[${idleBatch.assetId}]";
-      _tryRender(idleBatch);
-    }
-  }
-
-  void remove(LoadItem item) {
-    items.removeWhere((loopItem) =>
-        loopItem.albumId == item.albumId && loopItem.assetId == item.assetId);
-  }
-
-  _tryRender(LoadItem item) {
-    AdvImagePickerPlugin.getAlbumThumbnail(
-        item.albumId, item.assetId, this.width, this.height, this.quality,
-        (albumId, assetId, data) {
-      if (thumbnailListener != null) thumbnailListener(albumId, assetId, data);
-
-      remove(LoadItem(0, 0, albumId, assetId));
-      renderingItems = renderingItems.replaceAll("[$assetId]", "");
-      counter--;
-
-      LoadItem idleBatch = items.lastWhere(
-          (loopItem) => renderingItems.indexOf("[${loopItem.assetId}]") == -1,
-          orElse: () => null);
-
-      if (counter < maxCounter && idleBatch != null) {
-        counter++;
-        renderingItems += "[${idleBatch.assetId}]";
-        _tryRender(idleBatch);
-      }
-    });
-  }
-
-  void dispose() {
-    items.clear();
   }
 }
 
@@ -321,12 +230,13 @@ class _SmartButtonState extends State<_SmartButton> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        padding: EdgeInsets.all(16.0),
-        child: AdvButton.text(
-          "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
-          width: double.infinity,
-          backgroundColor: AdvImagePicker.primaryColor,
-          onPressed: widget.onPressed,
-        ));
+      padding: EdgeInsets.all(16.0),
+      child: AdvButton.text(
+        "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
+        width: double.infinity,
+        backgroundColor: AdvImagePicker.primaryColor,
+        onPressed: widget.onPressed,
+      ),
+    );
   }
 }

@@ -1,3 +1,10 @@
+## 1.1.0
+
+* [Breaking Change] try to upgrade to 1.17.2
+* Fix memory issue with IOS
+* add method to get thumbnail image from image path (recommended than load the file itself)
+* Fix permission errors
+
 ## 1.0.7
 
 * Fix dependency with the latest basic components

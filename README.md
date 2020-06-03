@@ -8,6 +8,11 @@ This is my custom Image Picker that enabling you to multiple pick image and [Adv
 
 First, add `adv_image_picker` as a [dependency in your pubspec.yaml file](https://flutter.io/platform-plugins/).
 
+## Notes
+
+If you are about to load the image in thumbnail size, it is recommended to get the image bytes from AdvImagePickerPlugin.getThumbnail
+Otherwise, it will be causing memory issue
+
 ```
 adv_image_picker: ^1.0.6
 ```

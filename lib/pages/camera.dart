@@ -40,7 +40,6 @@ class _CameraPageState extends AdvState<CameraPage>
     with WidgetsBindingObserver {
   AdvCameraController controller;
   String imagePath;
-  int _currentCameraIndex = 0;
   Completer<String> takePictureCompleter;
   FlashType flashType = FlashType.auto;
 
@@ -60,10 +59,11 @@ class _CameraPageState extends AdvState<CameraPage>
         iconTheme: IconThemeData(color: Colors.black87),
       ),
       bottomSheet: Container(
-          padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-          color: Colors.white,
-          child:
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
+        color: Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
             AdvButton.custom(
               child: AdvColumn(
                   mainAxisSize: MainAxisSize.min,
@@ -117,25 +117,28 @@ class _CameraPageState extends AdvState<CameraPage>
                 },
               ),
             ),
-          ])),
+          ],
+        ),
+      ),
       key: _scaffoldKey,
       body: _buildWidget(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         heroTag: "CaptureButton",
         elevation: 0.0,
-        onPressed: () {
-          process(() async {
-            String resultPath = await takePicture();
+        onPressed: () async {
+          String resultPath = await takePicture();
 
-            if (resultPath == null) return;
-            ByteData bytes = await _readFileByte(resultPath);
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        ResultPage([ResultItem("", resultPath, data: bytes)])));
-          });
+          if (resultPath == null) return;
+
+          ResultItem result = ResultItem("", resultPath);
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (BuildContext context) => ResultPage([result]),
+            ),
+          );
         },
         backgroundColor: AdvImagePicker.primaryColor,
         highlightElevation: 0.0,
@@ -150,28 +153,16 @@ class _CameraPageState extends AdvState<CameraPage>
     );
   }
 
-  Future<ByteData> _readFileByte(String filePath) async {
-    Uri myUri = Uri.parse(filePath);
-    File imageFile = new File.fromUri(myUri);
-    Uint8List bytes;
-    await imageFile.readAsBytes().then((value) {
-      bytes = Uint8List.fromList(value);
-      print('reading of bytes is completed');
-    }).catchError((onError) {
-      print('Exception Error while reading audio from path:' +
-          onError.toString());
-    });
-    return bytes.buffer.asByteData();
-  }
-
-  goToGallery() {
+  void goToGallery() {
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (BuildContext context) => GalleryPage(
-                  allowMultiple: widget.allowMultiple,
-                  maxSize: widget.maxSize,
-                )));
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) => GalleryPage(
+          allowMultiple: widget.allowMultiple,
+          maxSize: widget.maxSize,
+        ),
+      ),
+    );
   }
 
   Widget _buildWidget(BuildContext context) {

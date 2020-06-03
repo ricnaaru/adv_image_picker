@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.CursorIndexOutOfBoundsException;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.Uri;
@@ -25,7 +24,6 @@ import com.squareup.picasso.Picasso;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,11 +47,8 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
     private Activity activity;
     private Context context;
     private BinaryMessenger messenger;
-    private Result pendingResult;
-    private MethodCall methodCall;
     private ThreadPoolExecutor mDecodeThreadPool;
     private Picasso picasso;
-    private int REQUEST_CODE_SINGLE_PERMISSION = 0;
 
     private AdvImagePickerPlugin(Registrar registrar) {
         this.activity = registrar.activity();
@@ -159,21 +154,19 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
             cursor.close();
             result.success(assetIds);
         } else if (call.method.equals("getAlbumThumbnail")) {
-            final String albumId = call.argument("albumId");
-            final String assetId = call.argument("assetId");
+            final String imagePath = call.argument("imagePath");
             final int width = call.argument("width");
             final int height = call.argument("height");
             final int quality = call.argument("quality");
-            GetThumbnailTask task = new GetThumbnailTask(this.messenger, albumId, assetId, width, height, quality);
+            GetThumbnailTask task = new GetThumbnailTask(this.messenger, imagePath, width, height, quality);
 
             task.executeOnExecutor(mDecodeThreadPool);
             result.success(true);
         } else if (call.method.equals("getAlbumOriginal")) {
-            final String albumId = call.argument("albumId");
-            final String assetId = call.argument("assetId");
+            final String imagePath = call.argument("imagePath");
             final int maxSize = call.argument("maxSize") == null ? 0 : (int) (call.argument("maxSize"));
-            final int quality = call.argument("quality");
-            GetImageTask task = new GetImageTask(this.messenger, albumId, assetId, quality, maxSize);
+            final int quality = call.argument("quality") == null ? 0 : (int) (call.argument("quality"));
+            GetImageTask task = new GetImageTask(this.messenger, imagePath, quality, maxSize);
 
             task.executeOnExecutor(mDecodeThreadPool);
             result.success(true);
@@ -182,30 +175,23 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         }
     }
 
-    private void clearMethodCallAndResult() {
-        methodCall = null;
-        pendingResult = null;
-    }
-
     private class GetImageTask extends AsyncTask<String, Void, ByteBuffer> {
         BinaryMessenger messenger;
-        String albumId;
-        String assetId;
+        String imagePath;
         int quality;
         int maxSize;
 
-        GetImageTask(BinaryMessenger messenger, String albumId, String assetId, int quality, int maxSize) {
+        GetImageTask(BinaryMessenger messenger, String imagePath, int quality, int maxSize) {
             super();
             this.messenger = messenger;
-            this.albumId = albumId;
-            this.assetId = assetId;
+            this.imagePath = imagePath;
             this.quality = quality;
             this.maxSize = maxSize;
         }
 
         @Override
         protected ByteBuffer doInBackground(String... strings) {
-            File file = new File(this.assetId);
+            File file = new File(this.imagePath);
             String packageName = context.getPackageName();
 
             Uri contentUri = FileProvider.getUriForFile(context, packageName + ".fileprovider", file);
@@ -218,7 +204,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                         .get();
 
                 int rotate = 0;
-                ExifInterface exif = new ExifInterface(this.assetId);
+                ExifInterface exif = new ExifInterface(this.imagePath);
                 int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
                 if (maxSize != 0) {
@@ -244,7 +230,6 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                 if (rotate > 0) {
                     Matrix matrix = new Matrix();
-                    Log.d("ricirc", "rotate 1 => " + rotate);
                     matrix.postRotate(rotate);
 
                     bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
@@ -267,23 +252,21 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         @Override
         protected void onPostExecute(ByteBuffer buffer) {
             super.onPostExecute(buffer);
-            this.messenger.send("adv_image_picker/image/fetch/original/" + albumId + "/" + assetId, buffer);
+            this.messenger.send("adv_image_picker/image/fetch/original/" + imagePath, buffer);
         }
     }
 
     private class GetThumbnailTask extends AsyncTask<String, Void, ByteBuffer> {
         BinaryMessenger messenger;
-        String albumId;
-        String assetId;
+        String imagePath;
         int width;
         int height;
         int quality;
 
-        GetThumbnailTask(BinaryMessenger messenger, String albumId, String assetId, int width, int height, int quality) {
+        GetThumbnailTask(BinaryMessenger messenger, String imagePath, int width, int height, int quality) {
             super();
             this.messenger = messenger;
-            this.albumId = albumId;
-            this.assetId = assetId;
+            this.imagePath = imagePath;
             this.width = width;
             this.height = height;
             this.quality = quality;
@@ -291,11 +274,10 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
         @Override
         protected ByteBuffer doInBackground(String... strings) {
-            File file = new File(this.assetId);
+            File file = new File(this.imagePath);
 
             String packageName = context.getPackageName();
             Uri contentUri = FileProvider.getUriForFile(context, packageName + ".fileprovider", file);
-            InputStream stream = null;
             byte[] byteArray = null;
 
             try {
@@ -308,7 +290,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                 int rotate = 0;
 
-                ExifInterface exif = new ExifInterface(this.assetId);
+                ExifInterface exif = new ExifInterface(this.imagePath);
                 int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
                 switch (orientation) {
@@ -325,7 +307,6 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
 
                 if (rotate > 0) {
                     Matrix matrix = new Matrix();
-                    Log.d("ricirc", "rotate => " + rotate);
                     matrix.postRotate(rotate);
 
                     bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(),
@@ -352,26 +333,7 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         @Override
         protected void onPostExecute(ByteBuffer byteBuffer) {
             super.onPostExecute(byteBuffer);
-            this.messenger.send("adv_image_picker/image/fetch/thumbnails/" + albumId + "/" + assetId, byteBuffer);
+            this.messenger.send("adv_image_picker/image/fetch/thumbnails/" + imagePath, byteBuffer);
         }
     }
-
-    private static int getOrientation(Context context, Uri photoUri) {
-        try {
-            Cursor cursor = context.getContentResolver().query(photoUri,
-                    new String[]{MediaStore.Images.ImageColumns.ORIENTATION}, null, null, null);
-
-            if (cursor.getCount() != 1) {
-                return -1;
-            }
-
-            cursor.moveToFirst();
-            return cursor.getInt(0);
-        } catch (CursorIndexOutOfBoundsException e) {
-
-        }
-        return -1;
-    }
-
-
 }

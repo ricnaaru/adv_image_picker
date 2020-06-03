@@ -2,15 +2,11 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:adv_image_picker/models/album_item.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AdvImagePickerPlugin {
   static const MethodChannel _channel = const MethodChannel('adv_image_picker');
-
-  static Future<bool> getIosCameraPermission() async {
-    bool result = await _channel.invokeMethod("getIosCameraPermission");
-    return result;
-  }
 
   static Future<bool> getIosStoragePermission() async {
     bool result = await _channel.invokeMethod("getIosStoragePermission");
@@ -30,12 +26,17 @@ class AdvImagePickerPlugin {
     return albums;
   }
 
-  static Future<dynamic> getAlbumThumbnail(String albumId, String assetId,
-      int width, int height, int quality, Function callback) async {
-    assert(albumId != null);
-    assert(assetId != null);
+  static Future<ByteData> getAlbumThumbnail({
+    @required String imagePath,
+    @required int width,
+    @required int height,
+    int quality = 100,
+  }) async {
+    assert(imagePath != null);
     assert(width != null);
     assert(height != null);
+
+    Completer<ByteData> completer = Completer<ByteData>();
 
     if (width != null && width < 0) {
       throw new ArgumentError.value(width, 'width cannot be negative');
@@ -50,57 +51,61 @@ class AdvImagePickerPlugin {
           quality, 'quality should be in range 0-100');
     }
 
-    defaultBinaryMessenger.setMessageHandler(
-        'adv_image_picker/image/fetch/thumbnails/$albumId/$assetId',
-        (ByteData message) {
-      callback(albumId, assetId, message);
-      defaultBinaryMessenger.setMessageHandler(
-          'adv_image_picker/image/fetch/thumbnails/$albumId/$assetId', null);
+    ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+      'adv_image_picker/image/fetch/thumbnails/$imagePath',
+      (ByteData message) {
+        ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+            'adv_image_picker/image/fetch/thumbnails/$imagePath', null);
+        completer.complete(message);
+        return null;
+      },
+    );
 
-      return null;
-    });
+    await _channel.invokeMethod(
+      "getAlbumThumbnail",
+      <String, dynamic>{
+        "imagePath": imagePath,
+        "width": width,
+        "height": height,
+        "quality": quality
+      },
+    );
 
-    var thumbnails =
-        await _channel.invokeMethod("getAlbumThumbnail", <String, dynamic>{
-      "albumId": albumId,
-      "assetId": assetId,
-      "width": width,
-      "height": height,
-      "quality": quality
-    });
-    return thumbnails;
+    return completer.future;
   }
 
   static Future<dynamic> getAlbumOriginal(
-      String albumId, String assetId, int quality, Function callback, {int maxSize}) async {
-    assert(albumId != null);
-    assert(assetId != null);
+    String imagePath,
+    int quality,
+    Function callback, {
+    int maxSize,
+  }) async {
+    assert(imagePath != null);
 
     if (quality < 0 || quality > 100) {
       throw new ArgumentError.value(
           quality, 'quality should be in range 0-100');
     }
 
-    defaultBinaryMessenger.setMessageHandler(
-        'adv_image_picker/image/fetch/original/$albumId/$assetId',
-        (ByteData message) {
-      callback(albumId, assetId, message);
-      defaultBinaryMessenger.setMessageHandler(
-          'adv_image_picker/image/fetch/original/$albumId/$assetId', null);
+    ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+      'adv_image_picker/image/fetch/original/$imagePath',
+      (ByteData message) {
+        callback(imagePath, message);
+        ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+            'adv_image_picker/image/fetch/original/$imagePath', null);
 
-      return null;
-    });
+        return null;
+      },
+    );
 
     Map<String, dynamic> param = <String, dynamic>{
-      "albumId": albumId,
-      "assetId": assetId,
+      "imagePath": imagePath,
       "quality": quality
     };
 
     if (maxSize != null) param.putIfAbsent("maxSize", () => maxSize);
 
-    var thumbnails = await _channel.invokeMethod(
-        "getAlbumOriginal", param);
+    var thumbnails = await _channel.invokeMethod("getAlbumOriginal", param);
     return thumbnails;
   }
 

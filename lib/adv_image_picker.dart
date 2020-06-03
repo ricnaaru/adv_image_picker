@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
+import 'package:adv_camera/adv_camera_plugin.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
-import 'package:basic_components/basic_components.dart';
 import 'package:basic_components/utilities/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,7 +37,7 @@ class AdvImagePicker {
   static String cameraFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
 
-  static Future<List<File>> pickImagesToFile(BuildContext context,
+  static Future<List<ResultItem>> _pickImages(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
       bool allowMultiple = true,
@@ -50,12 +51,8 @@ class AdvImagePicker {
     }
 
     if (Platform.isIOS) {
-      bool hasPermission = false;
-      if (usingCamera) {
-        hasPermission = await AdvImagePickerPlugin.getIosCameraPermission();
-      } else {
-        hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
-      }
+      bool hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
+
       if (!hasPermission) {
         Toast.showToast(context, "Permission denied");
         return null;
@@ -76,22 +73,44 @@ class AdvImagePicker {
             builder: (BuildContext context) => advImagePickerHome,
             settings: RouteSettings(name: "AdvImagePickerHome")));
 
-    if (images == null) return [];
+    return images ?? [];
+  }
+
+  static Future<List<File>> pickImagesToFile(BuildContext context,
+      {bool usingCamera = true,
+        bool usingGallery = true,
+        bool allowMultiple = true,
+        int maxSize}) async {
+    List<ResultItem> images = await _pickImages(context);
+
+    List<File> files = [];
 
     for (ResultItem item in images) {
       File file = File.fromUri(Uri.parse(item.filePath));
       bool fileExists = await file.exists();
 
       if (!fileExists) {
-        final buffer = item.data.buffer;
+        final data = await _readFileByte(item.filePath);
+        final buffer = data.buffer;
         final Directory extDir = await getApplicationDocumentsDirectory();
         final String dirPath = '${extDir.path}/Pictures/flutter_test';
         await Directory(dirPath).create(recursive: true);
         final String filePath = '$dirPath/${_timestamp()}.jpg';
         file = await File(filePath).writeAsBytes(buffer.asUint8List(
-            item.data.offsetInBytes, item.data.lengthInBytes));
+            data.offsetInBytes, data.lengthInBytes));
       }
+
       files.add(file);
+
+      if (item.albumId == null) {
+        File cameraImage = File(item.filePath);
+
+        bool fileExists = await cameraImage.exists();
+
+        if (!fileExists) {
+          cameraImage.deleteSync();
+        }
+      }
     }
 
     return files;
@@ -102,48 +121,32 @@ class AdvImagePicker {
       bool usingGallery = true,
       bool allowMultiple = true,
       int maxSize}) async {
-    assert(usingCamera != false || usingGallery != false);
-
-    if (Platform.isAndroid) {
-      bool hasPermission = await AdvImagePickerPlugin.getPermission();
-
-      if (!hasPermission) return null;
-    }
-
-    if (Platform.isIOS) {
-      bool hasPermission = false;
-      if (usingCamera) {
-        hasPermission = await AdvImagePickerPlugin.getIosCameraPermission();
-      } else {
-        hasPermission = await AdvImagePickerPlugin.getIosStoragePermission();
-      }
-      if (!hasPermission) {
-        Toast.showToast(context, "Permission denied");
-        return null;
-      }
-    }
-
-    Widget advImagePickerHome = usingCamera
-        ? CameraPage(
-            enableGallery: usingGallery,
-            allowMultiple: allowMultiple,
-            maxSize: maxSize)
-        : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
+    List<ResultItem> images = await _pickImages(context);
 
     List<ByteData> datas = [];
-    List<ResultItem> images = await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (BuildContext context) => advImagePickerHome,
-            settings: RouteSettings(name: "AdvImagePickerHome")));
-
-    if (images == null) return [];
 
     for (ResultItem item in images) {
-      datas.add(item.data);
+      final data = await _readFileByte(item.filePath);
+      datas.add(data);
+
+      if (item.albumId == null) {
+        File cameraImage = File(item.filePath);
+
+        bool fileExists = await cameraImage.exists();
+
+        if (!fileExists) {
+          cameraImage.deleteSync();
+        }
+      }
     }
 
     return datas;
+  }
+
+  static Future<ByteData> _readFileByte(String filePath) async {
+    File imageFile = new File(filePath);
+    Uint8List bytes = imageFile.readAsBytesSync();
+    return bytes.buffer.asByteData();
   }
 
   static String _timestamp() =>

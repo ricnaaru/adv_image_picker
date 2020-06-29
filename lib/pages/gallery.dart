@@ -35,7 +35,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
   String lastScroll = "";
   int batchCounter = 0;
   ImageListController _controller;
-  bool _multipleMode = false;
+  bool _multipleMode = true;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ValueNotifier<int> buttonController = ValueNotifier<int>(0);
 
@@ -63,7 +63,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
     }
   }
 
-  toggleMultipleMode() {
+  /*toggleMultipleMode() {
     if (_controller == null || albums == null) return;
 
     if (!_multipleMode) {
@@ -81,7 +81,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
     } else {
       Navigator.pop(context);
     }
-  }
+  }*/
 
   submit() {
     process(() async {
@@ -93,10 +93,10 @@ class _GalleryPageState extends AdvState<GalleryPage> {
         images.add(ResultItem(data.albumId, data.assetId));
       }
 
-      var page = ResultPage(images);
+      var page = ResultPage(images, cameFromGallery: true);
 
-      Navigator.push(context,
-          MaterialPageRoute(builder: (BuildContext context) => page));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (BuildContext context) => page));
     });
   }
 
@@ -114,6 +114,15 @@ class _GalleryPageState extends AdvState<GalleryPage> {
 
   @override
   Widget buildView(BuildContext context) {
+    /*if (mounted) {
+      buttonController.value = 0;
+
+      //setState(() {
+      //_marginBottom = _multipleMode ? 0.0 : 80.0;
+      _multipleMode = true;
+      _controller.setMaxImage(_multipleMode ? null : 1);
+      //});
+    }*/
     return Scaffold(
       key: _scaffoldKey,
       appBar: new AppBar(
@@ -121,19 +130,6 @@ class _GalleryPageState extends AdvState<GalleryPage> {
         centerTitle: false,
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black87),
-        actions: (widget.allowMultiple)
-            ? [
-                IconButton(
-                  onPressed: () {
-                    toggleMultipleMode();
-                  },
-                  icon: Icon(
-                    _multipleMode ? Icons.photo : Icons.photo_library,
-                    color: Colors.black87,
-                  ),
-                )
-              ]
-            : [],
         title: DropdownButton(
             isDense: true,
             items: albums == null || albums.length == 0
@@ -159,6 +155,13 @@ class _GalleryPageState extends AdvState<GalleryPage> {
       body: AdvFutureBuilder(
         futureExecutor: _loadAll,
         widgetBuilder: _buildWidget,
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          await submit();
+        },
+        label: Text('Continue (${buttonController.value ?? 0})'),
+        icon: Icon(Icons.arrow_forward),
       ),
     );
   }

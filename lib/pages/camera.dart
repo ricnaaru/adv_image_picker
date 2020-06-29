@@ -1,21 +1,18 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/components/adv_state.dart';
+import 'package:adv_image_picker/components/camera_image_holder.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
-import 'package:basic_components/components/adv_button.dart';
-import 'package:basic_components/components/adv_column.dart';
 import 'package:basic_components/components/adv_loading_with_barrier.dart';
-import 'package:basic_components/components/adv_visibility.dart';
 import 'package:basic_components/utilities/toast.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -40,6 +37,7 @@ class _CameraPageState extends AdvState<CameraPage>
     with WidgetsBindingObserver {
   AdvCameraController controller;
   String imagePath;
+  List<ResultItem> images = [];
   Completer<String> takePictureCompleter;
   FlashType flashType = FlashType.auto;
 
@@ -63,67 +61,77 @@ class _CameraPageState extends AdvState<CameraPage>
         color: Colors.white,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AdvButton.custom(
-              child: AdvColumn(
-                  mainAxisSize: MainAxisSize.min,
-                  divider: ColumnDivider(4.0),
-                  children: [
-                    Text(AdvImagePicker.rotate),
-                    Icon(Icons.switch_camera),
-                  ]),
-              buttonSize: ButtonSize.small,
-              primaryColor: Colors.white,
-              accentColor: Colors.black87,
-              onPressed: () {
-                controller.switchCamera();
-              },
-            ),
-            Container(
-              margin: EdgeInsets.only(top: 8.0),
-              child: Text(
-                AdvImagePicker.photo,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.0),
-              ),
-            ),
-            AdvVisibility(
-              visibility: widget.enableGallery
-                  ? VisibilityFlag.visible
-                  : VisibilityFlag.invisible,
-              child: AdvButton.custom(
-                child: AdvColumn(
-                    mainAxisSize: MainAxisSize.min,
-                    divider: ColumnDivider(4.0),
-                    children: [
-                      Text(AdvImagePicker.gallery),
-                      Icon(Icons.photo_album),
-                    ]),
-                buttonSize: ButtonSize.small,
-                primaryColor: Colors.white,
-                accentColor: Colors.black87,
-                onPressed: () async {
-                  if (Platform.isIOS) {
-                    bool hasPermission =
-                        await AdvImagePickerPlugin.getIosStoragePermission();
-                    if (!hasPermission) {
-                      Toast.showToast(context, "Permission denied");
-                      return null;
-                    } else {
-                      goToGallery();
-                    }
+            FloatingActionButton(
+              heroTag: 'GoToGallery',
+              onPressed: () async {
+                if (Platform.isIOS) {
+                  bool hasPermission =
+                      await AdvImagePickerPlugin.getIosStoragePermission();
+                  if (!hasPermission) {
+                    Toast.showToast(context, "Permission denied");
+                    return null;
                   } else {
                     goToGallery();
                   }
-                },
+                } else {
+                  goToGallery();
+                }
+              },
+              //mini: true,
+              child: Icon(Icons.photo_library),
+            ),
+            InkWell(
+              onTap: () async {
+                String resultPath = await takePicture();
+
+                if (resultPath == null) return;
+
+                ResultItem result = ResultItem("", resultPath);
+
+                List<ResultItem> _newImages = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (BuildContext context) => ResultPage([result]),
+                  ),
+                );
+                setState(() {
+                  images.addAll(_newImages);
+                });
+              },
+              child: Material(
+                elevation: 4,
+                shape: CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: CircleAvatar(
+                  radius: 35,
+                  backgroundColor: AdvImagePicker.primaryColor.withAlpha(100),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: CircleAvatar(
+                        radius: 29,
+                        backgroundColor: AdvImagePicker.primaryColor),
+                  ),
+                ),
               ),
             ),
+            FloatingActionButton(
+              heroTag: 'Submit',
+              onPressed: () {
+                Navigator.pop(context, images);
+              },
+              child: Icon(Icons.check),
+              //backgroundColor: Colors.green,
+            )
           ],
         ),
       ),
       key: _scaffoldKey,
       body: _buildWidget(context),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton(
+      //floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      /*floatingActionButton: FloatingActionButton(
         heroTag: "CaptureButton",
         elevation: 0.0,
         onPressed: () async {
@@ -133,28 +141,32 @@ class _CameraPageState extends AdvState<CameraPage>
 
           ResultItem result = ResultItem("", resultPath);
 
-          Navigator.push(
+          List<ResultItem> _newImages = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (BuildContext context) => ResultPage([result]),
             ),
           );
+          setState(() {
+            images.addAll(_newImages);
+          });
         },
-        backgroundColor: AdvImagePicker.primaryColor,
+        backgroundColor: AdvImagePicker.primaryColor.withAlpha(80),
         highlightElevation: 0.0,
         child: Container(
-          width: 30.0,
-          height: 30.0,
+          width: 40.0,
+          height: 40.0,
           decoration: BoxDecoration(
-              color: Colors.white,
+              color: AdvImagePicker.primaryColor,
               borderRadius: BorderRadius.all(Radius.circular(30.0))),
         ),
-      ),
+      ),*/
     );
   }
 
-  void goToGallery() {
-    Navigator.push(
+  void goToGallery() async {
+    List<ResultItem> _newImages = [];
+    _newImages = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (BuildContext context) => GalleryPage(
@@ -163,6 +175,9 @@ class _CameraPageState extends AdvState<CameraPage>
         ),
       ),
     );
+    setState(() {
+      images.addAll(_newImages);
+    });
   }
 
   Widget _buildWidget(BuildContext context) {
@@ -189,7 +204,7 @@ class _CameraPageState extends AdvState<CameraPage>
           left: 8.0,
           child: FloatingActionButton(
             heroTag: "FlashButton",
-            backgroundColor: AdvImagePicker.primaryColor,
+            backgroundColor: AdvImagePicker.primaryColor.withAlpha(80),
             mini: true,
             child: Icon(
               flashType == FlashType.auto
@@ -203,6 +218,52 @@ class _CameraPageState extends AdvState<CameraPage>
             elevation: 0.0,
           ),
         ),
+        Positioned(
+          top: 8.0,
+          right: 8.0,
+          child: FloatingActionButton(
+            heroTag: "SwitchCameras",
+            backgroundColor: AdvImagePicker.primaryColor.withAlpha(80),
+            mini: true,
+            child: Icon(
+              Icons.switch_camera,
+              size: 18.0,
+            ),
+            onPressed: () {
+              controller.switchCamera();
+            },
+            elevation: 0.0,
+          ),
+        ),
+        Positioned(
+          bottom: 130,
+          left: 0.0,
+          right: 0.0,
+          child: Container(
+            //color: Colors.grey,
+            height: 70,
+            //width: 200,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: 10,
+              itemBuilder: (context, index) => GestureDetector(
+                onTap: () {},
+                child: CameraImageHolder(
+                  isCover: false,
+                  child: images.length < (index + 1)
+                      ? Icon(
+                          Icons.add_a_photo,
+                          color: Colors.grey,
+                        )
+                      : Image.asset(
+                          images[index].filePath,
+                          fit: BoxFit.fill,
+                        ),
+                ),
+              ),
+            ),
+          ),
+        )
       ],
     );
   }

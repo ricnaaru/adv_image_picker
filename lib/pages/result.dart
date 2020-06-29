@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/preview.dart';
@@ -12,8 +9,9 @@ import 'package:flutter/widgets.dart';
 
 class ResultPage extends StatefulWidget {
   final List<ResultItem> images;
+  final bool cameFromGallery;
 
-  ResultPage(this.images);
+  ResultPage(this.images, {this.cameFromGallery = false});
 
   @override
   State<StatefulWidget> createState() => _ResultPageSate();
@@ -38,7 +36,6 @@ class _ResultPageSate extends State<ResultPage> {
           Expanded(
             child: Preview(
               imagesPath: widget.images.map((ResultItem item) {
-
                 return item.filePath;
               }).toList(),
 //              imageProviders: widget.images.map((ResultItem item) {
@@ -82,10 +79,19 @@ class _ResultPageSate extends State<ResultPage> {
                     primaryColor: Colors.white,
                     accentColor: AdvImagePicker.primaryColor,
                     onPressed: () {
-                      Navigator.popUntil(
-                          context, ModalRoute.withName("AdvImagePickerHome"));
+                      /*Navigator.popUntil(
+                          context, ModalRoute.withName("AdvImagePickerHome"));*/
+                      if (widget.cameFromGallery) {
+                        // pop out of gallery
+                        print('Came from gallery!, pop it off');
+                        Navigator.pop(context);
+                        Navigator.pop(context);
+                      }
                       if (Navigator.canPop(context))
-                        Navigator.pop(context, widget.images);
+                        print('Yes, I can still pop');
+                      print(
+                          widget.images.length.toString() + ' images carried!');
+                      Navigator.pop(context, widget.images);
                     },
                   ),
                 ),

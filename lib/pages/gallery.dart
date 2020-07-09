@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/components/adv_state.dart';
@@ -16,8 +17,10 @@ import 'package:image_list/image_list.dart';
 class GalleryPage extends StatefulWidget {
   final bool allowMultiple;
   final int maxSize;
+  final List<File> files;
+  final int maxImages;
 
-  GalleryPage({bool allowMultiple, this.maxSize})
+  GalleryPage({bool allowMultiple, this.maxSize, this.maxImages, this.files})
       : assert(maxSize == null || maxSize >= 0),
         this.allowMultiple = allowMultiple ?? true;
 
@@ -98,6 +101,10 @@ class _GalleryPageState extends AdvState<GalleryPage> {
       Navigator.push(
           context, MaterialPageRoute(builder: (BuildContext context) => page));
     });
+  }
+
+  void showInSnackBar(String message) {
+    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
   }
 
   switchMultipleMode() {
@@ -200,6 +207,9 @@ class _GalleryPageState extends AdvState<GalleryPage> {
   }
 
   void _onImageTapped(int count) {
+    if (widget.files.length == 10) {
+      showInSnackBar('Maximum images reached!');
+    }
     if (!_multipleMode) {
       submit();
       return;

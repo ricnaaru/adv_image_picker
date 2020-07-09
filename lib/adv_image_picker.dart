@@ -3,7 +3,6 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
-import 'package:adv_camera/adv_camera_plugin.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/camera.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
@@ -78,12 +77,15 @@ class AdvImagePicker {
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
-        bool usingGallery = true,
-        bool allowMultiple = true,
-        int maxSize}) async {
+      bool usingGallery = true,
+      bool allowMultiple = true,
+      List<File> files,
+      int maxImages = 10,
+      int minImages = 1,
+      int maxSize}) async {
     List<ResultItem> images = await _pickImages(context);
 
-    List<File> files = [];
+    //files = [];
 
     for (ResultItem item in images) {
       File file = File.fromUri(Uri.parse(item.filePath));
@@ -96,8 +98,8 @@ class AdvImagePicker {
         final String dirPath = '${extDir.path}/Pictures/flutter_test';
         await Directory(dirPath).create(recursive: true);
         final String filePath = '$dirPath/${_timestamp()}.jpg';
-        file = await File(filePath).writeAsBytes(buffer.asUint8List(
-            data.offsetInBytes, data.lengthInBytes));
+        file = await File(filePath).writeAsBytes(
+            buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       }
 
       files.add(file);

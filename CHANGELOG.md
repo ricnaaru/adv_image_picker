@@ -1,3 +1,7 @@
+## 1.1.1
+
+* Fix dependency for camera to 1.1.2+1
+
 ## 1.1.0
 
 * [Breaking Change] try to upgrade to 1.17.2

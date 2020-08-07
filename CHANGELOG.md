@@ -1,3 +1,8 @@
+## 1.1.1+1
+
+* Fix dependency for camera to 1.1.2+2
+* Fix dropdown overflow of the gallery page
+
 ## 1.1.1
 
 * Fix dependency for camera to 1.1.2+1

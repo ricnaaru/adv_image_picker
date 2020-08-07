@@ -16,6 +16,7 @@ import 'package:basic_components/components/adv_visibility.dart';
 import 'package:basic_components/utilities/toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -133,10 +134,19 @@ class _CameraPageState extends AdvState<CameraPage>
 
           ResultItem result = ResultItem("", resultPath);
 
+          List<ResultItem> tempItems = await _cropImage([result]);
+
+          if (tempItems == null) {
+            Navigator.pop(context);
+            return;
+          }
+
+          ResultItem finalResult = tempItems.first;
+
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (BuildContext context) => ResultPage([result]),
+              builder: (BuildContext context) => ResultPage([finalResult]),
             ),
           );
         },
@@ -268,5 +278,36 @@ class _CameraPageState extends AdvState<CameraPage>
 
       refresh();
     });
+  }
+
+  Future<List<ResultItem>> _cropImage(List<ResultItem> items) async {
+    List<ResultItem> result = [];
+
+    for (var image in items) {
+      File croppedFile = await ImageCropper.cropImage(
+          sourcePath: image.filePath,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio3x2,
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9
+          ],
+          androidUiSettings: AndroidUiSettings(
+            activeControlsWidgetColor: Color.lerp(Colors.white, Color(0xff140E57), .5),
+              toolbarTitle: 'Crop Image',
+              toolbarColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.original,
+              lockAspectRatio: false),
+          iosUiSettings: IOSUiSettings(
+            minimumAspectRatio: 1.0,
+          )
+      );
+
+      if (croppedFile == null) return null;
+
+      result.add(ResultItem(image.albumId, croppedFile.path));
+    }
+    return result;
   }
 }

@@ -13,6 +13,7 @@ dependencies:
 
   basic_components: ^1.0.2
   adv_camera: ^1.1.2+2
+  image_cropper: ^1.2.3
 #  camera:
 #    git:
 #      url: git://github.com/ricnaaru/plugins.git

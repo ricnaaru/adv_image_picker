@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/preview.dart';

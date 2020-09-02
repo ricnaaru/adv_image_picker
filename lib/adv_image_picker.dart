@@ -121,7 +121,7 @@ class AdvImagePicker {
       bool usingGallery = true,
       bool allowMultiple = true,
       int maxSize}) async {
-    List<ResultItem> images = await _pickImages(context);
+    List<ResultItem> images = await _pickImages(context, maxSize: maxSize);
 
     List<ByteData> datas = [];
 

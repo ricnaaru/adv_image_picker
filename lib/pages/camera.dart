@@ -230,7 +230,6 @@ class _CameraPageState extends AdvState<CameraPage>
     }
 
     takePictureCompleter = Completer<String>();
-    print("capture image => ${widget.maxSize}");
     await controller.captureImage(maxSize: widget.maxSize);
 
     return await takePictureCompleter.future;

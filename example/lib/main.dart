@@ -70,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _pickImage() async {
-    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 4080));
+    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 256));
 
     prepare();
   }

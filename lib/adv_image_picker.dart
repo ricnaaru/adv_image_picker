@@ -35,6 +35,7 @@ class AdvImagePicker {
   static String cameraFolderName =
       "images"; //only used if you dont specify [AdvImagePicker.cameraSavePath]
   static String cameraFilePrefixName = "adv_image_picker";
+  static String galleryFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
 
   static Future<List<ResultItem>> _pickImages(BuildContext context,
@@ -87,6 +88,13 @@ class AdvImagePicker {
 
     for (ResultItem item in images) {
       File file = File.fromUri(Uri.parse(item.filePath));
+      Image image = new Image.file(file);
+      Completer<Image> completer = new Completer<Image>();
+      image.image
+          .resolve(ImageConfiguration())
+          .addListener(ImageStreamListener((ImageInfo info, _) {
+        print("info => ${info.image}");
+      }));
       bool fileExists = await file.exists();
 
       if (!fileExists) {

@@ -186,6 +186,8 @@ class _GalleryPageState extends AdvState<GalleryPage> {
       child: ImageList(
         albumId: _selectedAlbum.identifier,
         maxImages: _multipleMode ? null : 1,
+        maxSize:widget.maxSize,
+        fileNamePrefix: AdvImagePicker.galleryFilePrefixName,
         onListCreated: _onListCreated,
         onImageTapped: _onImageTapped,
       ),

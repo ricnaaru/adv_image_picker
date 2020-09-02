@@ -40,7 +40,6 @@ void logError(String code, String message) => print(
 class _CameraPageState extends AdvState<CameraPage>
     with WidgetsBindingObserver {
   AdvCameraController controller;
-  String imagePath;
   Completer<String> takePictureCompleter;
   FlashType flashType = FlashType.auto;
 
@@ -48,7 +47,6 @@ class _CameraPageState extends AdvState<CameraPage>
 
   @override
   Widget buildView(BuildContext context) {
-    print("maxSize =>>>>> ${widget.maxSize}");
     return Scaffold(
       appBar: AppBar(
         title: Text(

@@ -285,11 +285,7 @@ class _CameraPageState extends AdvState<CameraPage>
       File croppedFile = await ImageCropper.cropImage(
           sourcePath: image.filePath,
           aspectRatioPresets: [
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio3x2,
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9
+            CropAspectRatioPreset.square
           ],
           androidUiSettings: AndroidUiSettings(
             activeControlsWidgetColor: Color.lerp(Colors.white, Color(0xff140E57), .5),

@@ -1,3 +1,7 @@
+## 1.1.2
+
+* Fix image max size for android and ios
+
 ## 1.1.1+1
 
 * Fix dependency for camera to 1.1.2+2

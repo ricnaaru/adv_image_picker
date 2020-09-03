@@ -284,6 +284,7 @@ class _CameraPageState extends AdvState<CameraPage>
     for (var image in items) {
       File croppedFile = await ImageCropper.cropImage(
           sourcePath: image.filePath,
+          aspectRatio: CropAspectRatio(ratioX: 1,ratioY: 1),
           aspectRatioPresets: [
             CropAspectRatioPreset.square
           ],
@@ -291,10 +292,12 @@ class _CameraPageState extends AdvState<CameraPage>
             activeControlsWidgetColor: Color.lerp(Colors.white, Color(0xff140E57), .5),
               toolbarTitle: 'Crop Image',
               toolbarColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.original,
+              initAspectRatio: CropAspectRatioPreset.square,
               lockAspectRatio: false),
           iosUiSettings: IOSUiSettings(
             minimumAspectRatio: 1.0,
+            rectWidth: 256,
+            rectHeight: 256,aspectRatioPickerButtonHidden: true,
           )
       );
 

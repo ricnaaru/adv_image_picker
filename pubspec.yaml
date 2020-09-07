@@ -1,6 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI
-version: 1.1.2+2
+version: 1.1.2+3
 homepage: https://github.com/ricnaaru/adv_image_picker
 
 environment:
@@ -38,7 +38,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.ric.advimagepicker
+        package: ric.com.advimagepicker
         pluginClass: AdvImagePickerPlugin
       ios:
         pluginClass: AdvImagePickerPlugin

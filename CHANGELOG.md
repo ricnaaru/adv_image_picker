@@ -1,3 +1,8 @@
+
+## 1.1.2+1
+
+* Integrating [Image Cropper](https://pub.dev/packages/image_cropper) Library
+
 ## 1.1.2
 
 * Fix image max size for android and ios

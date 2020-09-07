@@ -1,7 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI
-version: 1.1.2+1
-author: Richardo <richardothayeb@gmail.com>
+version: 1.1.2+2
 homepage: https://github.com/ricnaaru/adv_image_picker
 
 environment:
@@ -25,7 +24,7 @@ dependencies:
   photo_view: ^0.9.2
 #  image: ^2.0.7
 #  image_picker: ^0.6.0+15
-  image_list: 0.2.2+2
+  image_list: ^0.2.2+2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://www.dartlang.org/tools/pub/pubspec
@@ -39,10 +38,10 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.ric.adv_camera
-        pluginClass: AdvCameraPlugin
+        package: com.ric.advimagepicker
+        pluginClass: AdvImagePickerPlugin
       ios:
-        pluginClass: AdvCameraPlugin
+        pluginClass: AdvImagePickerPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

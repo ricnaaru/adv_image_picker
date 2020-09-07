@@ -1,4 +1,12 @@
-## 1.1.2+2~3
+## 1.1.2+4
+
+* Fix gradle version
+
+## 1.1.2+3
+
+* Fix pubspec bug
+
+## 1.1.2+2
 
 * Fix pubspec bug
 

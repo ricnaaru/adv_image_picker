@@ -131,26 +131,28 @@ class _GalleryPageState extends AdvState<GalleryPage> {
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black87),
         title: DropdownButton(
-            isDense: true,
-            items: albums == null || albums.length == 0
-                ? [DropdownMenuItem(child: Text(""), value: "")]
-                : albums.map((Album album) {
-                    return DropdownMenuItem(
-                        child: Text("${album.name}"), value: album.name);
-                  }).toList(),
-            value: albums == null || _selectedAlbum == null
-                ? ""
-                : _selectedAlbum.name,
-            onChanged: (albumName) {
-              if (albumName == null || albums.length == 0) return;
+          isDense: true,
+          isExpanded: true,
+          items: albums == null || albums.length == 0
+              ? [DropdownMenuItem(child: Text(""), value: "")]
+              : albums.map((Album album) {
+                  return DropdownMenuItem(
+                      child: Text("${album.name}"), value: album.name);
+                }).toList(),
+          value: albums == null || _selectedAlbum == null
+              ? ""
+              : _selectedAlbum.name,
+          onChanged: (albumName) {
+            if (albumName == null || albums.length == 0) return;
 
-              setState(() {
-                _selectedAlbum =
-                    albums.firstWhere((Album album) => album.name == albumName);
-              });
+            setState(() {
+              _selectedAlbum =
+                  albums.firstWhere((Album album) => album.name == albumName);
+            });
 
-              _controller.reloadAlbum(_selectedAlbum.identifier);
-            }),
+            _controller.reloadAlbum(_selectedAlbum.identifier);
+          },
+        ),
       ),
       body: AdvFutureBuilder(
         futureExecutor: _loadAll,

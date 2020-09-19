@@ -1,3 +1,7 @@
+## 1.1.3
+
+* Integrate with new camera 1.1.3+1
+
 ## 1.1.2+4
 
 * Fix gradle version

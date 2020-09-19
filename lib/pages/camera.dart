@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
 import 'package:adv_image_picker/adv_image_picker.dart';
@@ -15,8 +14,6 @@ import 'package:basic_components/components/adv_loading_with_barrier.dart';
 import 'package:basic_components/components/adv_visibility.dart';
 import 'package:basic_components/utilities/toast.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:image_cropper/image_cropper.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -42,11 +39,13 @@ class _CameraPageState extends AdvState<CameraPage>
   AdvCameraController controller;
   Completer<String> takePictureCompleter;
   FlashType flashType = FlashType.auto;
+  List<FlashType> _flashTypes;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget buildView(BuildContext context) {
+    print("build");
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -75,9 +74,7 @@ class _CameraPageState extends AdvState<CameraPage>
               buttonSize: ButtonSize.small,
               primaryColor: Colors.white,
               accentColor: Colors.black87,
-              onPressed: () {
-                controller.switchCamera();
-              },
+              onPressed: switchCamera,
             ),
             Container(
               margin: EdgeInsets.only(top: 8.0),
@@ -133,19 +130,10 @@ class _CameraPageState extends AdvState<CameraPage>
 
           ResultItem result = ResultItem("", resultPath);
 
-          List<ResultItem> tempItems = await _cropImage([result]);
-
-          if (tempItems == null) {
-            Navigator.pop(context);
-            return;
-          }
-
-          ResultItem finalResult = tempItems.first;
-
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (BuildContext context) => ResultPage([finalResult]),
+              builder: (BuildContext context) => ResultPage([result]),
             ),
           );
         },
@@ -175,9 +163,13 @@ class _CameraPageState extends AdvState<CameraPage>
   }
 
   Widget _buildWidget(BuildContext context) {
-    return AdvLoadingWithBarrier(
+    return Container(
+      color: Colors.green,
+      child: AdvLoadingWithBarrier(
         content: (BuildContext context) => _cameraPreviewWidget(context),
-        isProcessing: controller == null);
+        isProcessing: controller == null || _flashTypes == null,
+      ),
+    );
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).
@@ -193,25 +185,26 @@ class _CameraPageState extends AdvState<CameraPage>
           cameraPreviewRatio: CameraPreviewRatio.r16_9,
           fileNamePrefix: AdvImagePicker.cameraFilePrefixName,
         ),
-        Positioned(
-          top: 8.0,
-          left: 8.0,
-          child: FloatingActionButton(
-            heroTag: "FlashButton",
-            backgroundColor: AdvImagePicker.primaryColor,
-            mini: true,
-            child: Icon(
-              flashType == FlashType.auto
-                  ? Icons.flash_auto
-                  : flashType == FlashType.on
-                      ? Icons.flash_on
-                      : Icons.flash_off,
-              size: 18.0,
+        if (_flashTypes != null && _flashTypes.length > 1)
+          Positioned(
+            top: 8.0,
+            left: 8.0,
+            child: FloatingActionButton(
+              heroTag: "FlashButton",
+              backgroundColor: AdvImagePicker.primaryColor,
+              mini: true,
+              child: Icon(
+                flashType == FlashType.auto
+                    ? Icons.flash_auto
+                    : flashType == FlashType.on
+                        ? Icons.flash_on
+                        : Icons.flash_off,
+                size: 18.0,
+              ),
+              onPressed: _toggleFlash,
+              elevation: 0.0,
             ),
-            onPressed: _toggleFlash,
-            elevation: 0.0,
           ),
-        ),
       ],
     );
   }
@@ -247,6 +240,7 @@ class _CameraPageState extends AdvState<CameraPage>
 
   void _onCameraCreated(AdvCameraController controller) {
     this.controller = controller;
+
     if (AdvImagePicker.cameraSavePath == null) {
       AdvImagePicker.getDefaultDirectoryForCamera().then((dir) async {
         await dir.create(recursive: true);
@@ -259,52 +253,48 @@ class _CameraPageState extends AdvState<CameraPage>
     }
 
     setState(() {});
+
+    controller.getFlashType().then((value) {
+      _flashTypes = value;
+      if (_flashTypes.isEmpty)
+        flashType = null;
+      else
+        flashType = _flashTypes.first;
+      setState(() {});
+    });
   }
 
   void _toggleFlash() {
     process(() async {
       if (controller == null) return;
 
+      if (_flashTypes.length <= 1) return;
+
       if (flashType == FlashType.auto) {
-        flashType = FlashType.on;
+        if (_flashTypes.contains(FlashType.on)) flashType = FlashType.on;
+        if (_flashTypes.contains(FlashType.off)) flashType = FlashType.off;
       } else if (flashType == FlashType.on) {
-        flashType = FlashType.off;
+        if (_flashTypes.contains(FlashType.off)) flashType = FlashType.off;
+        if (_flashTypes.contains(FlashType.auto)) flashType = FlashType.auto;
       } else if (flashType == FlashType.off) {
-        flashType = FlashType.auto;
+        if (_flashTypes.contains(FlashType.auto)) flashType = FlashType.auto;
+        if (_flashTypes.contains(FlashType.on)) flashType = FlashType.on;
       }
+
       await controller.setFlashType(flashType);
 
       refresh();
     });
   }
 
-  Future<List<ResultItem>> _cropImage(List<ResultItem> items) async {
-    List<ResultItem> result = [];
+  Future<void> switchCamera() async {
+    await controller.switchCamera();
+    _flashTypes = await controller.getFlashType();
+    if (_flashTypes.isEmpty)
+      flashType = null;
+    else
+      flashType = _flashTypes.first;
 
-    for (var image in items) {
-      File croppedFile = await ImageCropper.cropImage(
-          sourcePath: image.filePath,
-          aspectRatio: CropAspectRatio(ratioX: 1,ratioY: 1),
-          aspectRatioPresets: [
-            CropAspectRatioPreset.square
-          ],
-          androidUiSettings: AndroidUiSettings(
-            activeControlsWidgetColor: Color.lerp(Colors.white, Color(0xff140E57), .5),
-              toolbarTitle: 'Crop Image',
-              toolbarColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.square,
-              lockAspectRatio: false),
-          iosUiSettings: IOSUiSettings(
-            minimumAspectRatio: 1.0,
-            rectWidth: 256,
-            rectHeight: 256,aspectRatioPickerButtonHidden: true,
-          )
-      );
-
-      if (croppedFile == null) return null;
-
-      result.add(ResultItem(image.albumId, croppedFile.path));
-    }
-    return result;
+    setState(() {});
   }
 }

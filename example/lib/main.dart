@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     AdvImagePicker.cameraFolderName = "Camera Folder";
-    AdvImagePicker.cameraFilePrefixName = "CameraTestingPrefixName_";
+    AdvImagePicker.cameraFilePrefixName = "CameraTestingPrefixName";
     AdvImagePicker.cameraSavePath = "/storage/emulated/0/CameraTestingFolder/";
   }
 

@@ -79,10 +79,16 @@ class AdvImagePicker {
 
   static Future<List<File>> pickImagesToFile(BuildContext context,
       {bool usingCamera = true,
-        bool usingGallery = true,
-        bool allowMultiple = true,
-        int maxSize}) async {
-    List<ResultItem> images = await _pickImages(context, maxSize: maxSize);
+      bool usingGallery = true,
+      bool allowMultiple = true,
+      int maxSize}) async {
+    List<ResultItem> images = await _pickImages(
+      context,
+      usingCamera: usingCamera,
+      usingGallery: usingGallery,
+      allowMultiple: allowMultiple,
+      maxSize: maxSize,
+    );
 
     List<File> files = [];
 
@@ -104,8 +110,8 @@ class AdvImagePicker {
         final String dirPath = '${extDir.path}/Pictures/flutter_test';
         await Directory(dirPath).create(recursive: true);
         final String filePath = '$dirPath/${_timestamp()}.jpg';
-        file = await File(filePath).writeAsBytes(buffer.asUint8List(
-            data.offsetInBytes, data.lengthInBytes));
+        file = await File(filePath).writeAsBytes(
+            buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       }
 
       files.add(file);
@@ -129,7 +135,13 @@ class AdvImagePicker {
       bool usingGallery = true,
       bool allowMultiple = true,
       int maxSize}) async {
-    List<ResultItem> images = await _pickImages(context, maxSize: maxSize);
+    List<ResultItem> images = await _pickImages(
+      context,
+      usingCamera: usingCamera,
+      usingGallery: usingGallery,
+      allowMultiple: allowMultiple,
+      maxSize: maxSize,
+    );
 
     List<ByteData> datas = [];
 

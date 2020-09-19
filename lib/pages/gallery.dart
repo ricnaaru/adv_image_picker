@@ -12,7 +12,6 @@ import 'package:basic_components/components/adv_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_list/image_list.dart';
 
 class GalleryPage extends StatefulWidget {
@@ -95,14 +94,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
         images.add(ResultItem(data.albumId, data.assetId));
       }
 
-      List<ResultItem> finalImages = await _cropImage(images);
-
-      if (finalImages == null) {
-        Navigator.pop(context);
-        return;
-      }
-
-      var page = ResultPage(finalImages);
+      var page = ResultPage(images);
 
       Navigator.push(
           context, MaterialPageRoute(builder: (BuildContext context) => page));
@@ -186,7 +178,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
       child: ImageList(
         albumId: _selectedAlbum.identifier,
         maxImages: _multipleMode ? null : 1,
-        maxSize:widget.maxSize,
+        maxSize: widget.maxSize,
         fileNamePrefix: AdvImagePicker.galleryFilePrefixName,
         onListCreated: _onListCreated,
         onImageTapped: _onImageTapped,
@@ -218,35 +210,6 @@ class _GalleryPageState extends AdvState<GalleryPage> {
     setState(() {
       buttonController.value = count;
     });
-  }
-
-  Future<List<ResultItem>> _cropImage(List<ResultItem> items) async {
-    List<ResultItem> result = [];
-    for (var image in items) {
-      File croppedFile = await ImageCropper.cropImage(
-          sourcePath: image.filePath,
-          aspectRatio: CropAspectRatio(ratioX: 1,ratioY: 1),
-          aspectRatioPresets: [
-            CropAspectRatioPreset.square
-          ],
-          androidUiSettings: AndroidUiSettings(
-              activeControlsWidgetColor: Color.lerp(Colors.white, Color(0xff140E57), .5),
-              toolbarTitle: 'Crop Image',
-              toolbarColor: Colors.white,
-              initAspectRatio: CropAspectRatioPreset.square,
-              lockAspectRatio: false),
-          iosUiSettings: IOSUiSettings(
-            minimumAspectRatio: 1.0,
-            rectWidth: 256,
-            rectHeight: 256,aspectRatioPickerButtonHidden: true,
-          )
-      );
-
-      if (croppedFile == null) return null;
-
-      result.add(ResultItem(image.albumId, croppedFile.path));
-    }
-    return result;
   }
 }
 

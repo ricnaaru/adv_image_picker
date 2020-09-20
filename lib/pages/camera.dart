@@ -163,12 +163,9 @@ class _CameraPageState extends AdvState<CameraPage>
   }
 
   Widget _buildWidget(BuildContext context) {
-    return Container(
-      color: Colors.green,
-      child: AdvLoadingWithBarrier(
+    return AdvLoadingWithBarrier(
         content: (BuildContext context) => _cameraPreviewWidget(context),
         isProcessing: controller == null || _flashTypes == null,
-      ),
     );
   }
 

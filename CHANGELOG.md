@@ -1,3 +1,7 @@
+## 1.1.3+1
+
+* Fix green screen on camera
+
 ## 1.1.3
 
 * Integrate with new camera 1.1.3+1

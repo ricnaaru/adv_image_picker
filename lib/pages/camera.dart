@@ -36,7 +36,7 @@ class CameraPage extends StatefulWidget {
 void logError(String code, String message) => print(
     '${AdvImagePicker.error}: $code\n${AdvImagePicker.errorMessage}: $message');
 
-class _CameraPageState extends AdvState<CameraPage>
+class _CameraPageState extends State<CameraPage>
     with WidgetsBindingObserver {
   AdvCameraController controller;
   String imagePath;
@@ -46,7 +46,7 @@ class _CameraPageState extends AdvState<CameraPage>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
-  Widget buildView(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -254,7 +254,7 @@ class _CameraPageState extends AdvState<CameraPage>
   }
 
   void _toggleFlash() {
-    process(() async {
+    // process(() async {
       if (controller == null) return;
 
       if (flashType == FlashType.auto) {
@@ -264,9 +264,10 @@ class _CameraPageState extends AdvState<CameraPage>
       } else if (flashType == FlashType.off) {
         flashType = FlashType.auto;
       }
-      await controller.setFlashType(flashType);
 
-      refresh();
-    });
+      /*await*/ controller.setFlashType(flashType);
+
+      // refresh();
+    // });
   }
 }

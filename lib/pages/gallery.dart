@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
-import 'package:adv_image_picker/components/adv_state.dart';
 import 'package:adv_image_picker/models/album_item.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/result.dart';
@@ -25,7 +24,7 @@ class GalleryPage extends StatefulWidget {
   _GalleryPageState createState() => new _GalleryPageState();
 }
 
-class _GalleryPageState extends AdvState<GalleryPage> {
+class _GalleryPageState extends State<GalleryPage> {
   List<Album> albums;
   List<int> rows = [];
   List<String> needToBeRendered = [];
@@ -83,8 +82,8 @@ class _GalleryPageState extends AdvState<GalleryPage> {
     }
   }
 
-  submit() {
-    process(() async {
+  submit() async {
+    // process(() async {
       List<ResultItem> images = [];
 
       List<ImageData> imageData = await _controller.getSelectedImage();
@@ -97,7 +96,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
 
       Navigator.push(
           context, MaterialPageRoute(builder: (BuildContext context) => page));
-    });
+    // });
   }
 
   switchMultipleMode() {
@@ -113,7 +112,7 @@ class _GalleryPageState extends AdvState<GalleryPage> {
   }
 
   @override
-  Widget buildView(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: new AppBar(

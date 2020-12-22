@@ -1,5 +1,6 @@
 name: adv_image_picker_example
 description: Demonstrates how to use the adv_image_picker plugin.
+version: 1.0.0+1
 publish_to: 'none'
 
 environment:

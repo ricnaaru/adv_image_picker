@@ -6,7 +6,6 @@ import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:basic_components/components/adv_row.dart';
 import 'package:basic_components/components/adv_visibility.dart';
 import 'package:flutter/material.dart';
-import 'package:photo_view/photo_view.dart';
 
 class Preview extends StatefulWidget {
   final PreviewController controller;
@@ -80,13 +79,14 @@ class _PreviewState extends State<Preview> {
 
     children.add(
       Expanded(
-        child: PhotoView(
-          backgroundDecoration: BoxDecoration(
-              color: Colors.black.withBlue(60).withGreen(60).withRed(60)),
-          imageProvider: lastPhoto,
-          maxScale: PhotoViewComputedScale.covered * 2.0,
-          minScale: PhotoViewComputedScale.contained * 0.8,
-          initialScale: PhotoViewComputedScale.covered,
+        child: InteractiveViewer(
+          child: Image(image: lastPhoto),
+          // backgroundDecoration: BoxDecoration(
+          //     color: Colors.black.withBlue(60).withGreen(60).withRed(60)),
+          // imageProvider: ,
+          // maxScale: PhotoViewComputedScale.covered * 2.0,
+          // minScale: PhotoViewComputedScale.contained * 0.8,
+          // initialScale: PhotoViewComputedScale.covered,
         ),
       ),
     );

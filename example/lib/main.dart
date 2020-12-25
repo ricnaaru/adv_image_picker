@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -71,7 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _pickImage() async {
     files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 4080));
-
+    print("files => ${files.map((e) => e.path).join("\n")}");
     prepare();
   }
 

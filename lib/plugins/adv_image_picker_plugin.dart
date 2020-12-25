@@ -74,46 +74,13 @@ class AdvImagePickerPlugin {
     return completer.future;
   }
 
-  static Future<dynamic> getAlbumOriginal(
-    String imagePath,
-    int quality,
-    Function callback, {
-    int maxSize,
-  }) async {
-    assert(imagePath != null);
-
-    if (quality < 0 || quality > 100) {
-      throw new ArgumentError.value(
-          quality, 'quality should be in range 0-100');
-    }
-
-    ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
-      'adv_image_picker/image/fetch/original/$imagePath',
-      (ByteData message) {
-        callback(imagePath, message);
-        ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
-            'adv_image_picker/image/fetch/original/$imagePath', null);
-
-        return null;
-      },
-    );
-
-    Map<String, dynamic> param = <String, dynamic>{
-      "imagePath": imagePath,
-      "quality": quality
-    };
-
-    if (maxSize != null) param.putIfAbsent("maxSize", () => maxSize);
-
-    var thumbnails = await _channel.invokeMethod("getAlbumOriginal", param);
-    return thumbnails;
-  }
-
   static Future<List<String>> getAlbumAssetsId(Album albumItem) async {
     assert(albumItem != null);
 
     var assets = await _channel.invokeMethod(
-        "getAlbumAssetsId", <String, dynamic>{"albumName": albumItem.name});
+      "getAlbumAssetsId",
+      <String, dynamic>{"albumName": albumItem.name},
+    );
 
     return assets.map<String>((asset) {
       return asset.toString();

@@ -1,21 +1,14 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:adv_camera/adv_camera.dart';
 import 'package:adv_image_picker/adv_image_picker.dart';
-import 'package:adv_image_picker/components/adv_state.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/gallery.dart';
 import 'package:adv_image_picker/pages/result.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
-import 'package:basic_components/components/adv_button.dart';
-import 'package:basic_components/components/adv_column.dart';
-import 'package:basic_components/components/adv_loading_with_barrier.dart';
-import 'package:basic_components/components/adv_visibility.dart';
-import 'package:basic_components/utilities/toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
@@ -33,15 +26,12 @@ class CameraPage extends StatefulWidget {
   }
 }
 
-void logError(String code, String message) => print(
-    '${AdvImagePicker.error}: $code\n${AdvImagePicker.errorMessage}: $message');
-
-class _CameraPageState extends State<CameraPage>
-    with WidgetsBindingObserver {
+class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   AdvCameraController controller;
   String imagePath;
   Completer<String> takePictureCompleter;
   FlashType flashType = FlashType.auto;
+  bool processing = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -58,86 +48,29 @@ class _CameraPageState extends State<CameraPage>
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black87),
       ),
-      bottomSheet: Container(
-        padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-        color: Colors.white,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            AdvButton.custom(
-              child: AdvColumn(
-                  mainAxisSize: MainAxisSize.min,
-                  divider: ColumnDivider(4.0),
-                  children: [
-                    Text(AdvImagePicker.rotate),
-                    Icon(Icons.switch_camera),
-                  ]),
-              buttonSize: ButtonSize.small,
-              primaryColor: Colors.white,
-              accentColor: Colors.black87,
-              onPressed: () {
-                controller.switchCamera();
-              },
-            ),
-            Container(
-              margin: EdgeInsets.only(top: 8.0),
-              child: Text(
-                AdvImagePicker.photo,
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.0),
-              ),
-            ),
-            AdvVisibility(
-              visibility: widget.enableGallery
-                  ? VisibilityFlag.visible
-                  : VisibilityFlag.invisible,
-              child: AdvButton.custom(
-                child: AdvColumn(
-                    mainAxisSize: MainAxisSize.min,
-                    divider: ColumnDivider(4.0),
-                    children: [
-                      Text(AdvImagePicker.gallery),
-                      Icon(Icons.photo_album),
-                    ]),
-                buttonSize: ButtonSize.small,
-                primaryColor: Colors.white,
-                accentColor: Colors.black87,
-                onPressed: () async {
-                  if (Platform.isIOS) {
-                    bool hasPermission =
-                        await AdvImagePickerPlugin.getIosStoragePermission();
-                    if (!hasPermission) {
-                      Toast.showToast(context, "Permission denied");
-                      return null;
-                    } else {
-                      goToGallery();
-                    }
-                  } else {
-                    goToGallery();
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+      bottomSheet: buildBottomActions(context),
       key: _scaffoldKey,
       body: _buildWidget(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         heroTag: "CaptureButton",
         elevation: 0.0,
-        onPressed: () async {
-          String resultPath = await takePicture();
+        onPressed: () {
+          process(
+            () async {
+              String resultPath = await takePicture();
 
-          if (resultPath == null) return;
+              if (resultPath == null) return;
 
-          ResultItem result = ResultItem("", resultPath);
+              ResultItem result = ResultItem("", resultPath);
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (BuildContext context) => ResultPage([result]),
-            ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (BuildContext context) => ResultPage([result]),
+                ),
+              );
+            },
           );
         },
         backgroundColor: AdvImagePicker.primaryColor,
@@ -146,29 +79,37 @@ class _CameraPageState extends State<CameraPage>
           width: 30.0,
           height: 30.0,
           decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.all(Radius.circular(30.0))),
+            color: Colors.white,
+            borderRadius: BorderRadius.all(Radius.circular(30.0)),
+          ),
         ),
       ),
     );
   }
 
   void goToGallery() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => GalleryPage(
-          allowMultiple: widget.allowMultiple,
-          maxSize: widget.maxSize,
-        ),
-      ),
+    process(
+      () async {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (BuildContext context) => GalleryPage(
+              allowMultiple: widget.allowMultiple,
+              maxSize: widget.maxSize,
+            ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildWidget(BuildContext context) {
-    return AdvLoadingWithBarrier(
-        content: (BuildContext context) => _cameraPreviewWidget(context),
-        isProcessing: controller == null);
+    return Stack(
+      children: [
+        _cameraPreviewWidget(context),
+        if (controller == null) Center(child: CircularProgressIndicator()),
+      ],
+    );
   }
 
   /// Display the preview from the camera (or a message if the preview is not available).
@@ -205,12 +146,6 @@ class _CameraPageState extends State<CameraPage>
         ),
       ],
     );
-  }
-
-  String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
-
-  void showInSnackBar(String message) {
-    _scaffoldKey.currentState.showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<String> takePicture() async {
@@ -254,20 +189,115 @@ class _CameraPageState extends State<CameraPage>
   }
 
   void _toggleFlash() {
-    // process(() async {
-      if (controller == null) return;
+    process(
+      () async {
+        if (controller == null) return;
 
-      if (flashType == FlashType.auto) {
-        flashType = FlashType.on;
-      } else if (flashType == FlashType.on) {
-        flashType = FlashType.off;
-      } else if (flashType == FlashType.off) {
-        flashType = FlashType.auto;
-      }
+        if (flashType == FlashType.auto) {
+          flashType = FlashType.on;
+        } else if (flashType == FlashType.on) {
+          flashType = FlashType.off;
+        } else if (flashType == FlashType.off) {
+          flashType = FlashType.auto;
+        }
 
-      /*await*/ controller.setFlashType(flashType);
+        await controller.setFlashType(flashType);
 
-      // refresh();
-    // });
+        if (this.mounted) setState(() {});
+      },
+    );
+  }
+
+  Widget buildBottomActions(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
+      color: Colors.white,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          ActionButton(
+            text: AdvImagePicker.rotate,
+            icon: Icons.switch_camera,
+            onPressed: () {
+              process(() async {
+                await controller.switchCamera();
+              });
+            },
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 8.0),
+            child: Text(
+              AdvImagePicker.photo,
+              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.0),
+            ),
+          ),
+          Opacity(
+            opacity: widget.enableGallery ? 1 : 0,
+            child: IgnorePointer(
+              ignoring: !widget.enableGallery,
+              child: ActionButton(
+                text: AdvImagePicker.gallery,
+                icon: Icons.photo_album,
+                onPressed: () async {
+                  if (Platform.isIOS) {
+                    bool hasPermission =
+                        await AdvImagePickerPlugin.getIosStoragePermission();
+                    if (!hasPermission) {
+                      // Toast.showToast(context, "Permission denied");
+                      return null;
+                    } else {
+                      goToGallery();
+                    }
+                  } else {
+                    goToGallery();
+                  }
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> process(AsyncCallback func) async {
+    if (processing) return;
+
+    processing = true;
+
+    await func();
+
+    processing = false;
+  }
+}
+
+class ActionButton extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const ActionButton({
+    Key key,
+    this.text,
+    this.icon,
+    this.onPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: Padding(
+        padding: EdgeInsets.all(8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(text),
+            SizedBox(height: 4),
+            Icon(icon),
+          ],
+        ),
+      ),
+      onPressed: onPressed,
+    );
   }
 }

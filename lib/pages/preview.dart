@@ -3,8 +3,6 @@ import 'dart:typed_data';
 
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
-import 'package:basic_components/components/adv_row.dart';
-import 'package:basic_components/components/adv_visibility.dart';
 import 'package:flutter/material.dart';
 
 class Preview extends StatefulWidget {
@@ -56,8 +54,7 @@ class _PreviewState extends State<Preview> {
       }
     }
 
-    if (lastPhoto != null)
-      lastPhoto.evict();
+    if (lastPhoto != null) lastPhoto.evict();
 
     super.dispose();
   }
@@ -115,18 +112,17 @@ class _PreviewState extends State<Preview> {
             child: Stack(
               children: [
                 image,
-                AdvVisibility(
-                  child: Positioned(
-                    bottom: 0.0,
-                    left: 0.0,
-                    right: 0.0,
-                    height: widget.height / 100,
+                Positioned(
+                  bottom: 0.0,
+                  left: 0.0,
+                  right: 0.0,
+                  height: widget.height / 100,
+                  child: Opacity(
+                    opacity: i == controller.currentImage ? 1 : 0,
                     child: Container(
-                        color: AdvImagePicker.selectedImagePreviewColor),
+                      color: AdvImagePicker.selectedImagePreviewColor,
+                    ),
                   ),
-                  visibility: i == controller.currentImage
-                      ? VisibilityFlag.visible
-                      : VisibilityFlag.gone,
                 ),
               ],
             ),
@@ -135,13 +131,13 @@ class _PreviewState extends State<Preview> {
       }
 
       Widget rowOfThumbnails = SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: AdvRow(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              padding: EdgeInsets.symmetric(vertical: 4.0),
-              divider: RowDivider(4.0),
-              children: thumbnailWidgets));
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: thumbnailWidgets,
+        ),
+      );
 
       children.add(rowOfThumbnails);
     }

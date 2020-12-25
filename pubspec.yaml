@@ -5,23 +5,14 @@ author: Richardo <richardothayeb@gmail.com>
 homepage: https://github.com/ricnaaru/adv_image_picker
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  basic_components: ^1.0.2
   adv_camera: ^1.2.0
-#  camera:
-#    git:
-#      url: git://github.com/ricnaaru/plugins.git
-#      path: packages/camera
-#      ref: master
-#  camera: 0.4.3+1
   path_provider: ^1.6.9
-#  image: ^2.0.7
-#  image_picker: ^0.6.0+15
   image_list: ^1.0.0
 
 # For information on the generic Dart part of this file, see the

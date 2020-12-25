@@ -4,9 +4,7 @@ import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/album_item.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/result.dart';
-import 'package:adv_image_picker/plugins/adv_future_builder.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
-import 'package:basic_components/components/adv_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -62,20 +60,27 @@ class _GalleryPageState extends State<GalleryPage> {
     }
   }
 
-  toggleMultipleMode() {
+  void toggleMultipleMode() {
     if (_controller == null || albums == null) return;
 
     if (!_multipleMode) {
       _scaffoldKey.currentState
           .showBottomSheet((BuildContext context) {
-            return _SmartButton(buttonController, onPressed: () async {
-              await submit();
-            });
+            return _SmartButton(
+              buttonController,
+              onPressed: () async {
+                await submit();
+              },
+            );
           })
           .closed
           .then((_) {
-            switchMultipleMode();
+            if (this.mounted)
+              setState(() {
+                switchMultipleMode();
+              });
           });
+
       switchMultipleMode();
     } else {
       Navigator.pop(context);
@@ -84,31 +89,27 @@ class _GalleryPageState extends State<GalleryPage> {
 
   submit() async {
     // process(() async {
-      List<ResultItem> images = [];
+    List<ResultItem> images = [];
 
-      List<ImageData> imageData = await _controller.getSelectedImage();
+    List<ImageData> imageData = await _controller.getSelectedImage();
 
-      for (ImageData data in imageData) {
-        images.add(ResultItem(data.albumId, data.assetId));
-      }
+    for (ImageData data in imageData) {
+      images.add(ResultItem(data.albumId, data.assetId));
+    }
 
-      var page = ResultPage(images);
+    var page = ResultPage(images);
 
-      Navigator.push(
-          context, MaterialPageRoute(builder: (BuildContext context) => page));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (BuildContext context) => page));
     // });
   }
 
-  switchMultipleMode() {
-    if (mounted) {
-      buttonController.value = 0;
+  void switchMultipleMode() {
+    buttonController.value = 0;
 
-      setState(() {
-        _marginBottom = _multipleMode ? 0.0 : 80.0;
-        _multipleMode = !_multipleMode;
-        _controller.setMaxImage(_multipleMode ? null : 1);
-      });
-    }
+    _marginBottom = _multipleMode ? 0.0 : 80.0;
+    _multipleMode = !_multipleMode;
+    _controller.setMaxImage(_multipleMode ? null : 1);
   }
 
   @override
@@ -116,7 +117,7 @@ class _GalleryPageState extends State<GalleryPage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: new AppBar(
-        elevation: 0.0,
+        elevation: 0,
         centerTitle: false,
         backgroundColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.black87),
@@ -133,33 +134,36 @@ class _GalleryPageState extends State<GalleryPage> {
                 )
               ]
             : [],
-        title: DropdownButton(
-          isDense: true,
-          isExpanded: true,
-          items: albums == null || albums.length == 0
-              ? [DropdownMenuItem(child: Text(""), value: "")]
-              : albums.map((Album album) {
-                  return DropdownMenuItem(
-                      child: Text("${album.name}"), value: album.name);
-                }).toList(),
-          value: albums == null || _selectedAlbum == null
-              ? ""
-              : _selectedAlbum.name,
-          onChanged: (albumName) {
-            if (albumName == null || albums.length == 0) return;
+        title: Center(
+          child: DropdownButton(
+            underline: Container(),
+            isDense: true,
+            isExpanded: true,
+            items: albums == null || albums.length == 0
+                ? [DropdownMenuItem(child: Text(""), value: "")]
+                : albums.map((Album album) {
+                    return DropdownMenuItem(
+                        child: Text("${album.name}"), value: album.name);
+                  }).toList(),
+            value: albums == null || _selectedAlbum == null
+                ? ""
+                : _selectedAlbum.name,
+            onChanged: (albumName) {
+              if (albumName == null || albums.length == 0) return;
 
-            setState(() {
-              _selectedAlbum =
-                  albums.firstWhere((Album album) => album.name == albumName);
-            });
+              setState(() {
+                _selectedAlbum =
+                    albums.firstWhere((Album album) => album.name == albumName);
+              });
 
-            _controller.reloadAlbum(_selectedAlbum.identifier);
-          },
+              _controller.reloadAlbum(_selectedAlbum.identifier);
+            },
+          ),
         ),
       ),
-      body: AdvFutureBuilder(
-        futureExecutor: _loadAll,
-        widgetBuilder: _buildWidget,
+      body: FutureBuilder(
+        future: _loadAll(context),
+        builder: (BuildContext context, _) => _buildWidget(context),
       ),
     );
   }
@@ -232,11 +236,14 @@ class _SmartButtonState extends State<_SmartButton> {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: EdgeInsets.all(16.0),
-      child: AdvButton.text(
-        "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
-        width: double.infinity,
-        backgroundColor: AdvImagePicker.primaryColor,
+      child: FlatButton(
+        child: Text(
+          "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
+          style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
+        ),
+        color: AdvImagePicker.primaryColor,
         onPressed: widget.onPressed,
       ),
     );

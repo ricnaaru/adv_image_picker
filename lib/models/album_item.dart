@@ -32,15 +32,9 @@ class Album {
 class AlbumItem {
   final String identifier;
 
-  ByteData get thumbnail => _thumbnail;
-
   int selectionIndex = 0;
 
-  set thumbnail(ByteData value) {
-    _thumbnail = value;
-  }
-
-  ByteData _thumbnail;
+  ByteData thumbnail;
 
   AlbumItem(this.identifier);
 

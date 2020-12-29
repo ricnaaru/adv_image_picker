@@ -1,3 +1,8 @@
+## 1.2.1
+
+* Fix dependency for camera to 1.3.1+1
+* Tidy ups
+
 ## 1.2.0
 
 * Tidy up and remove unnecessary components

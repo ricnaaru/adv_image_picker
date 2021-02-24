@@ -1,3 +1,7 @@
+## 1.2.2
+
+* Fix problem with ContentResolver for android Q and above
+
 ## 1.2.1
 
 * Fix dependency for camera to 1.3.1+1

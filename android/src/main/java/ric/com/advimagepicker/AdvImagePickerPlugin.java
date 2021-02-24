@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
 
@@ -100,31 +101,40 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                     })
                     .check();
         } else if (call.method.equals("getAlbums")) {
+            Log.d("ricric", "inilah aku " +  MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
-            String[] projection = {"COUNT(*) as count",
+            String[] projection = {
                     MediaStore.Images.Media.BUCKET_ID,
                     MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
 
             final String orderBy = MediaStore.Images.Media.DISPLAY_NAME;
-            Cursor cursor = context.getContentResolver().query(uri, projection, "1) GROUP BY (" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME, null, orderBy + " DESC");
+
+            Cursor cursor = null;
+
+            if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                cursor = context.getContentResolver().query(uri, projection, null, null, orderBy + " DESC", null);
+            } else {
+                cursor = context.getContentResolver().query(uri, projection, "1) GROUP BY (" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME, null, orderBy + " DESC");
+            }
 
             ArrayList<HashMap<String, Object>> finalResult = new ArrayList<>();
+            ArrayList<String> finalKeys = new ArrayList<>();
 
             if (cursor != null) {
                 int columnId = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID);
                 int columnName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
-                int columnCount = cursor.getColumnIndexOrThrow("count");
-
 
                 while (cursor.moveToNext()) {
-                    HashMap<String, Object> albumItem = new HashMap<>();
+                    if (!finalKeys.contains(cursor.getString(columnId))) {
+                        HashMap<String, Object> albumItem = new HashMap<>();
 
-                    albumItem.put("name", cursor.getString(columnName));
-                    albumItem.put("identifier", cursor.getString(columnId));
-                    albumItem.put("assetCount", cursor.getInt(columnCount));
-
-                    finalResult.add(albumItem);
+                        albumItem.put("name", cursor.getString(columnName));
+                        albumItem.put("identifier", cursor.getString(columnId));
+                        albumItem.put("assetCount", cursor.getCount());
+                        finalKeys.add(cursor.getString(columnId));
+                        finalResult.add(albumItem);
+                    }
                 }
 
                 cursor.close();

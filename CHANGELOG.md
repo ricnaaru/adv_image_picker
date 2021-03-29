@@ -1,3 +1,7 @@
+## 1.2.3
+
+* Temporary version for Flutter 2
+
 ## 1.2.2
 
 * Fix problem with ContentResolver for android Q and above

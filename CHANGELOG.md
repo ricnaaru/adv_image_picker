@@ -1,3 +1,7 @@
+## 2.0.0-nullsafety
+
+* Migrate to Null safety
+
 ## 1.2.3
 
 * Temporary version for Flutter 2

@@ -31,9 +31,33 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   String? imagePath;
   Completer<String>? takePictureCompleter;
   FlashType flashType = FlashType.auto;
+  bool initialized = false;
   bool processing = false;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+    if (AdvImagePicker.cameraSavePath == null) {
+      AdvImagePicker.getDefaultDirectoryForCamera().then((dir) async {
+        print("diu => $dir");
+        if (dir == null) return;
+
+        await dir.create(recursive: true);
+
+        AdvImagePicker.cameraSavePath = dir.path;
+
+        if (this.mounted)
+          setState(() {
+            initialized = true;
+          });
+      });
+    } else {
+      initialized = true;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +128,8 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   }
 
   Widget _buildWidget(BuildContext context) {
+    if (!initialized) return Center(child: CircularProgressIndicator());
+
     return Stack(
       children: [
         _cameraPreviewWidget(context),
@@ -117,6 +143,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     return Stack(
       children: [
         AdvCamera(
+          savePath: AdvImagePicker.cameraSavePath,
           onCameraCreated: _onCameraCreated,
           onImageCaptured: (String path) {
             if (takePictureCompleter == null) return;
@@ -162,12 +189,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   }
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addObserver(this);
-  }
-
-  @override
   void dispose() {
     WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
@@ -175,18 +196,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 
   void _onCameraCreated(AdvCameraController controller) {
     this.controller = controller;
-    if (AdvImagePicker.cameraSavePath == null) {
-      AdvImagePicker.getDefaultDirectoryForCamera().then((dir) async {
-        if (dir == null) return;
-
-        await dir.create(recursive: true);
-
-        await controller
-            .setSavePath("${dir.path}/${AdvImagePicker.cameraFolderName}");
-      });
-    } else {
-      controller.setSavePath("${AdvImagePicker.cameraSavePath}");
-    }
 
     setState(() {});
   }

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:adv_image_picker/models/album_item.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AdvImagePickerPlugin {
@@ -19,7 +18,7 @@ class AdvImagePickerPlugin {
 
   static Future<dynamic> getAlbums() async {
     final List<dynamic> images = await _channel.invokeMethod('getAlbums');
-    List<Album> albums = List<Album>();
+    List<Album> albums = <Album>[];
     for (var element in images) {
       albums.add(Album.fromJson(element));
     }
@@ -27,15 +26,11 @@ class AdvImagePickerPlugin {
   }
 
   static Future<ByteData> getAlbumThumbnail({
-    @required String imagePath,
-    @required int width,
-    @required int height,
+    required String imagePath,
+    required int? width,
+    required int? height,
     int quality = 100,
   }) async {
-    assert(imagePath != null);
-    assert(width != null);
-    assert(height != null);
-
     Completer<ByteData> completer = Completer<ByteData>();
 
     if (width != null && width < 0) {
@@ -51,10 +46,10 @@ class AdvImagePickerPlugin {
           quality, 'quality should be in range 0-100');
     }
 
-    ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+    ServicesBinding.instance!.defaultBinaryMessenger.setMessageHandler(
       'adv_image_picker/image/fetch/thumbnails/$imagePath',
-      (ByteData message) {
-        ServicesBinding.instance.defaultBinaryMessenger.setMessageHandler(
+      (ByteData? message) {
+        ServicesBinding.instance!.defaultBinaryMessenger.setMessageHandler(
             'adv_image_picker/image/fetch/thumbnails/$imagePath', null);
         completer.complete(message);
         return null;
@@ -75,8 +70,6 @@ class AdvImagePickerPlugin {
   }
 
   static Future<List<String>> getAlbumAssetsId(Album albumItem) async {
-    assert(albumItem != null);
-
     var assets = await _channel.invokeMethod(
       "getAlbumAssetsId",
       <String, dynamic>{"albumName": albumItem.name},

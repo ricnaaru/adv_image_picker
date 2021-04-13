@@ -9,12 +9,12 @@ class Preview extends StatefulWidget {
   final PreviewController controller;
   final double height;
 
-  Preview(
-      {double height,
-      int currentImage,
-      List<String> imagesPath,
-      PreviewController controller})
-      : assert(
+  Preview({
+    double? height,
+    int? currentImage,
+    List<String>? imagesPath,
+    PreviewController? controller,
+  })  : assert(
             controller == null || (currentImage == null && imagesPath == null)),
         this.height = height ?? 250.0,
         this.controller = controller ??
@@ -28,9 +28,9 @@ class Preview extends StatefulWidget {
 }
 
 class _PreviewState extends State<Preview> {
-  List<ImageProvider> thumbnails;
-  List<String> lastFilesPath;
-  ImageProvider lastPhoto;
+  List<ImageProvider>? thumbnails;
+  List<String>? lastFilesPath;
+  ImageProvider? lastPhoto;
 
   @override
   void initState() {
@@ -49,12 +49,12 @@ class _PreviewState extends State<Preview> {
   @override
   void dispose() {
     if ((thumbnails?.length ?? 0) > 0) {
-      for (ImageProvider each in thumbnails) {
+      for (ImageProvider each in thumbnails!) {
         each.evict();
       }
     }
 
-    if (lastPhoto != null) lastPhoto.evict();
+    if (lastPhoto != null) lastPhoto!.evict();
 
     super.dispose();
   }
@@ -77,13 +77,7 @@ class _PreviewState extends State<Preview> {
     children.add(
       Expanded(
         child: InteractiveViewer(
-          child: Image(image: lastPhoto),
-          // backgroundDecoration: BoxDecoration(
-          //     color: Colors.black.withBlue(60).withGreen(60).withRed(60)),
-          // imageProvider: ,
-          // maxScale: PhotoViewComputedScale.covered * 2.0,
-          // minScale: PhotoViewComputedScale.contained * 0.8,
-          // initialScale: PhotoViewComputedScale.covered,
+          child: Image(image: lastPhoto!),
         ),
       ),
     );
@@ -91,10 +85,10 @@ class _PreviewState extends State<Preview> {
     if (controller.filesPath.length > 1) {
       List<Widget> thumbnailWidgets = [];
 
-      for (int i = 0; i < thumbnails.length; i++) {
+      for (int i = 0; i < thumbnails!.length; i++) {
         Widget image = Container(
           child: Image(
-            image: thumbnails[i],
+            image: thumbnails![i],
             fit: BoxFit.cover,
           ),
           color: Colors.black,
@@ -194,13 +188,13 @@ class PreviewController extends ValueNotifier<PreviewEditingValue> {
         currentImage: this.currentImage, filesPath: newFilesPath);
   }
 
-  PreviewController({int currentImage, List<String> filesPath})
+  PreviewController({int? currentImage, List<String>? filesPath})
       : super(currentImage == null && filesPath == null
             ? PreviewEditingValue.empty
             : new PreviewEditingValue(
                 currentImage: currentImage, filesPath: filesPath));
 
-  PreviewController.fromValue(PreviewEditingValue value)
+  PreviewController.fromValue(PreviewEditingValue? value)
       : super(value ?? PreviewEditingValue.empty);
 
   void clear() {
@@ -210,9 +204,10 @@ class PreviewController extends ValueNotifier<PreviewEditingValue> {
 
 @immutable
 class PreviewEditingValue {
-  const PreviewEditingValue(
-      {int currentImage, List<String> filesPath = const []})
-      : this.currentImage = currentImage ?? 0,
+  const PreviewEditingValue({
+    int? currentImage,
+    List<String>? filesPath,
+  })  : this.currentImage = currentImage ?? 0,
         this.filesPath = filesPath ?? const [];
 
   final int currentImage;
@@ -220,7 +215,7 @@ class PreviewEditingValue {
 
   static const PreviewEditingValue empty = const PreviewEditingValue();
 
-  PreviewEditingValue copyWith({int currentImage, List<String> filesPath}) {
+  PreviewEditingValue copyWith({int? currentImage, List<String>? filesPath}) {
     return new PreviewEditingValue(
         currentImage: currentImage ?? this.currentImage,
         filesPath: filesPath ?? this.filesPath);

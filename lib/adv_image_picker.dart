@@ -24,19 +24,19 @@ class AdvImagePicker {
   static String confirmation = "Confirmation";
   static String confirm = "Confirm";
   static String cancel = "Cancel";
-  static String cameraSavePath;
+  static String? cameraSavePath;
   static String cameraFolderName =
       "images"; //only used if you dont specify [AdvImagePicker.cameraSavePath]
   static String cameraFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
 
-  static Future<List<ResultItem>> _pickImages(
+  static Future<List<ResultItem>?> _pickImages(
     BuildContext context, {
     bool usingCamera = true,
     bool usingGallery = true,
     bool allowMultiple = true,
-    int maxSize,
-    Function(Exception) onError,
+    int? maxSize,
+    Function(Exception)? onError,
   }) async {
     assert(usingCamera != false || usingGallery != false);
 
@@ -64,21 +64,25 @@ class AdvImagePicker {
             maxSize: maxSize)
         : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
-    List<ResultItem> images = await Navigator.push(
+    List<ResultItem>? images = await Navigator.push(
         context,
         MaterialPageRoute(
             builder: (BuildContext context) => advImagePickerHome,
             settings: RouteSettings(name: "AdvImagePickerHome")));
 
-    return images ?? [];
+    return images;
   }
 
-  static Future<List<File>> pickImagesToFile(BuildContext context,
-      {bool usingCamera = true,
-      bool usingGallery = true,
-      bool allowMultiple = true,
-      int maxSize}) async {
-    List<ResultItem> images = await _pickImages(context);
+  static Future<List<File>?> pickImagesToFile(
+    BuildContext context, {
+    bool usingCamera = true,
+    bool usingGallery = true,
+    bool allowMultiple = true,
+    int? maxSize,
+  }) async {
+    List<ResultItem>? images = await _pickImages(context);
+
+    if (images == null) return null;
 
     List<File> files = [];
 
@@ -113,14 +117,16 @@ class AdvImagePicker {
     return files;
   }
 
-  static Future<List<ByteData>> pickImagesToByte(BuildContext context,
+  static Future<List<ByteData>?> pickImagesToByte(BuildContext context,
       {bool usingCamera = true,
       bool usingGallery = true,
       bool allowMultiple = true,
-      int maxSize}) async {
-    List<ResultItem> images = await _pickImages(context);
+      int? maxSize}) async {
+    List<ResultItem>? images = await _pickImages(context);
 
-    List<ByteData> datas = [];
+    if (images == null) return null;
+
+    List<ByteData> datas = <ByteData>[];
 
     for (ResultItem item in images) {
       final data = await _readFileByte(item.filePath);
@@ -149,8 +155,8 @@ class AdvImagePicker {
   static String _timestamp() =>
       DateTime.now().millisecondsSinceEpoch.toString();
 
-  static Future<Directory> getDefaultDirectoryForCamera() async {
-    Directory extDir;
+  static Future<Directory?> getDefaultDirectoryForCamera() async {
+    Directory? extDir;
 
     if (Platform.isIOS) {
       extDir = await getApplicationDocumentsDirectory();

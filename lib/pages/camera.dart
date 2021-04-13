@@ -13,9 +13,9 @@ import 'package:flutter/material.dart';
 class CameraPage extends StatefulWidget {
   final bool allowMultiple;
   final bool enableGallery;
-  final int maxSize;
+  final int? maxSize;
 
-  CameraPage({bool allowMultiple, bool enableGallery, this.maxSize})
+  CameraPage({bool? allowMultiple, bool? enableGallery, this.maxSize})
       : assert(maxSize == null || maxSize >= 0),
         this.allowMultiple = allowMultiple ?? true,
         this.enableGallery = enableGallery ?? true;
@@ -27,9 +27,9 @@ class CameraPage extends StatefulWidget {
 }
 
 class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
-  AdvCameraController controller;
-  String imagePath;
-  Completer<String> takePictureCompleter;
+  AdvCameraController? controller;
+  String? imagePath;
+  Completer<String>? takePictureCompleter;
   FlashType flashType = FlashType.auto;
   bool processing = false;
 
@@ -58,7 +58,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         onPressed: () {
           process(
             () async {
-              String resultPath = await takePicture();
+              String? resultPath = await takePicture();
 
               if (resultPath == null) return;
 
@@ -119,7 +119,8 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
         AdvCamera(
           onCameraCreated: _onCameraCreated,
           onImageCaptured: (String path) {
-            takePictureCompleter.complete(path);
+            if (takePictureCompleter == null) return;
+            takePictureCompleter!.complete(path);
             takePictureCompleter = null;
           },
           cameraPreviewRatio: CameraPreviewRatio.r16_9,
@@ -148,27 +149,27 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     );
   }
 
-  Future<String> takePicture() async {
+  Future<String?> takePicture() async {
     if (controller == null || takePictureCompleter != null) {
       return null;
     }
 
     takePictureCompleter = Completer<String>();
 
-    await controller.captureImage(maxSize: widget.maxSize);
+    await controller!.captureImage(maxSize: widget.maxSize);
 
-    return await takePictureCompleter.future;
+    return await takePictureCompleter!.future;
   }
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     super.dispose();
   }
 
@@ -176,6 +177,8 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     this.controller = controller;
     if (AdvImagePicker.cameraSavePath == null) {
       AdvImagePicker.getDefaultDirectoryForCamera().then((dir) async {
+        if (dir == null) return;
+
         await dir.create(recursive: true);
 
         await controller
@@ -201,7 +204,7 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
           flashType = FlashType.auto;
         }
 
-        await controller.setFlashType(flashType);
+        await controller!.setFlashType(flashType);
 
         if (this.mounted) setState(() {});
       },
@@ -219,8 +222,10 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
             text: AdvImagePicker.rotate,
             icon: Icons.switch_camera,
             onPressed: () {
+              if (controller == null) return;
+
               process(() async {
-                await controller.switchCamera();
+                await controller!.switchCamera();
               });
             },
           ),
@@ -274,12 +279,12 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
 class ActionButton extends StatelessWidget {
   final String text;
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const ActionButton({
-    Key key,
-    this.text,
-    this.icon,
+    Key? key,
+    required this.text,
+    required this.icon,
     this.onPressed,
   }) : super(key: key);
 

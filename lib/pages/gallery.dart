@@ -12,9 +12,9 @@ import 'package:image_list/image_list.dart';
 
 class GalleryPage extends StatefulWidget {
   final bool allowMultiple;
-  final int maxSize;
+  final int? maxSize;
 
-  GalleryPage({bool allowMultiple, this.maxSize})
+  GalleryPage({bool? allowMultiple, this.maxSize})
       : assert(maxSize == null || maxSize >= 0),
         this.allowMultiple = allowMultiple ?? true;
 
@@ -23,15 +23,14 @@ class GalleryPage extends StatefulWidget {
 }
 
 class _GalleryPageState extends State<GalleryPage> {
-  List<Album> albums;
+  List<Album>? albums;
   List<int> rows = [];
   List<String> needToBeRendered = [];
-  Album _selectedAlbum;
+  Album? _selectedAlbum;
   double _marginBottom = 0.0;
-  BuildContext contentContext;
   String lastScroll = "";
   int batchCounter = 0;
-  ImageListController _controller;
+  ImageListController? _controller;
   bool _multipleMode = false;
   GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   ValueNotifier<int> buttonController = ValueNotifier<int>(0);
@@ -54,9 +53,10 @@ class _GalleryPageState extends State<GalleryPage> {
         return album.copyWith(assetCount: album.items.length);
       }).toList();
     } on PlatformException catch (e) {
-      if (_scaffoldKey.currentState.mounted)
-        _scaffoldKey.currentState
-            ?.showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessengerState scaffoldMessenger = ScaffoldMessenger.of(context);
+      if (scaffoldMessenger.mounted)
+        scaffoldMessenger
+            .showSnackBar(SnackBar(content: Text(e.message ?? '')));
     }
   }
 
@@ -64,7 +64,7 @@ class _GalleryPageState extends State<GalleryPage> {
     if (_controller == null || albums == null) return;
 
     if (!_multipleMode) {
-      _scaffoldKey.currentState
+      _scaffoldKey.currentState!
           .showBottomSheet((BuildContext context) {
             return _SmartButton(
               buttonController,
@@ -88,20 +88,20 @@ class _GalleryPageState extends State<GalleryPage> {
   }
 
   submit() async {
-    // process(() async {
     List<ResultItem> images = [];
 
-    List<ImageData> imageData = await _controller.getSelectedImage();
+    List<ImageData>? imageData = await _controller!.getSelectedImage();
 
-    for (ImageData data in imageData) {
-      images.add(ResultItem(data.albumId, data.assetId));
+    if (imageData != null) {
+      for (ImageData data in imageData) {
+        images.add(ResultItem(data.albumId, data.assetId));
+      }
     }
 
-    var page = ResultPage(images);
+    Widget page = ResultPage(images);
 
     Navigator.push(
         context, MaterialPageRoute(builder: (BuildContext context) => page));
-    // });
   }
 
   void switchMultipleMode() {
@@ -109,7 +109,7 @@ class _GalleryPageState extends State<GalleryPage> {
 
     _marginBottom = _multipleMode ? 0.0 : 80.0;
     _multipleMode = !_multipleMode;
-    _controller.setMaxImage(_multipleMode ? null : 1);
+    _controller!.setMaxImage(_multipleMode ? null : 1);
   }
 
   @override
@@ -139,24 +139,23 @@ class _GalleryPageState extends State<GalleryPage> {
             underline: Container(),
             isDense: true,
             isExpanded: true,
-            items: albums == null || albums.length == 0
+            items: albums == null || albums!.length == 0
                 ? [DropdownMenuItem(child: Text(""), value: "")]
-                : albums.map((Album album) {
+                : albums!.map((Album album) {
                     return DropdownMenuItem(
                         child: Text("${album.name}"), value: album.name);
                   }).toList(),
             value: albums == null || _selectedAlbum == null
                 ? ""
-                : _selectedAlbum.name,
+                : _selectedAlbum!.name,
             onChanged: (albumName) {
-              if (albumName == null || albums.length == 0) return;
+              if (albumName == null || albums!.length == 0) return;
 
               setState(() {
                 _selectedAlbum =
-                    albums.firstWhere((Album album) => album.name == albumName);
+                    albums!.firstWhere((Album album) => album.name == albumName);
+                _controller!.reloadAlbum(_selectedAlbum!.identifier);
               });
-
-              _controller.reloadAlbum(_selectedAlbum.identifier);
             },
           ),
         ),
@@ -179,7 +178,7 @@ class _GalleryPageState extends State<GalleryPage> {
       margin: EdgeInsets.only(bottom: _marginBottom),
       child: ImageList(
         fileNamePrefix: "asdfasdfasdf",
-        albumId: _selectedAlbum.identifier,
+        albumId: _selectedAlbum!.identifier,
         maxImages: _multipleMode ? null : 1,
         onListCreated: _onListCreated,
         onImageTapped: _onImageTapped,
@@ -191,7 +190,7 @@ class _GalleryPageState extends State<GalleryPage> {
     if (albums != null) return false;
 
     await getAlbums();
-    _selectedAlbum = albums != null && albums.length > 0 ? albums[0] : null;
+    _selectedAlbum = albums != null && albums!.length > 0 ? albums![0] : null;
 
     setState(() {});
 
@@ -216,7 +215,7 @@ class _GalleryPageState extends State<GalleryPage> {
 
 class _SmartButton extends StatefulWidget {
   final ValueNotifier<int> controller;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   _SmartButton(this.controller, {this.onPressed});
 
@@ -240,7 +239,7 @@ class _SmartButtonState extends State<_SmartButton> {
       padding: EdgeInsets.all(16.0),
       child: FlatButton(
         child: Text(
-          "${AdvImagePicker.next} (${widget.controller.value ?? 0})",
+          "${AdvImagePicker.next} (${widget.controller.value})",
           style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),
         ),
         color: AdvImagePicker.primaryColor,

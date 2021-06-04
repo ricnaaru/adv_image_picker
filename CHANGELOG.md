@@ -1,3 +1,7 @@
+## 2.0.0+1
+
+* Change dependency for image_list to 2.0.1
+
 ## 2.0.0-nullsafety
 
 * Migrate to Null safety

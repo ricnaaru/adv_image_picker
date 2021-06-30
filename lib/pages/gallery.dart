@@ -8,6 +8,7 @@ import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:image_list/data/media.dart';
 import 'package:image_list/image_list.dart';
 
 class GalleryPage extends StatefulWidget {
@@ -90,10 +91,10 @@ class _GalleryPageState extends State<GalleryPage> {
   submit() async {
     List<ResultItem> images = [];
 
-    List<ImageData>? imageData = await _controller!.getSelectedImage();
+    List<MediaData>? imageData = await _controller!.getSelectedMedia();
 
     if (imageData != null) {
-      for (ImageData data in imageData) {
+      for (MediaData data in imageData) {
         images.add(ResultItem(data.albumId, data.assetId));
       }
     }
@@ -152,8 +153,8 @@ class _GalleryPageState extends State<GalleryPage> {
               if (albumName == null || albums!.length == 0) return;
 
               setState(() {
-                _selectedAlbum =
-                    albums!.firstWhere((Album album) => album.name == albumName);
+                _selectedAlbum = albums!
+                    .firstWhere((Album album) => album.name == albumName);
                 _controller!.reloadAlbum(_selectedAlbum!.identifier);
               });
             },
@@ -182,6 +183,7 @@ class _GalleryPageState extends State<GalleryPage> {
         maxImages: _multipleMode ? null : 1,
         onListCreated: _onListCreated,
         onImageTapped: _onImageTapped,
+        types: [MediaType.image],
       ),
     );
   }
@@ -201,7 +203,7 @@ class _GalleryPageState extends State<GalleryPage> {
     _controller = controller;
   }
 
-  void _onImageTapped(int count) {
+  void _onImageTapped(int count, List<MediaData> selectedMedias) {
     if (!_multipleMode) {
       submit();
       return;

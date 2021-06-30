@@ -1,3 +1,8 @@
+## 2.0.1
+
+* Change dependency for image_list to ^2.0.4+2
+* Change dependency for adv_camera to ^2.0.1+1
+
 ## 2.0.0+3
 
 * Change dependency for image_list to fixed 2.0.1+1

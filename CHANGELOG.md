@@ -1,3 +1,7 @@
+## 2.0.1+1
+
+* fix _pickImages method that previously doesn't pass the arguments
+
 ## 2.0.1
 
 * Change dependency for image_list to ^2.0.4+2

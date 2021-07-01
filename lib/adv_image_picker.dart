@@ -80,7 +80,13 @@ class AdvImagePicker {
     bool allowMultiple = true,
     int? maxSize,
   }) async {
-    List<ResultItem>? images = await _pickImages(context);
+    List<ResultItem>? images = await _pickImages(
+      context,
+      usingCamera: usingCamera,
+      usingGallery: usingGallery,
+      allowMultiple: allowMultiple,
+      maxSize: maxSize,
+    );
 
     if (images == null) return null;
 
@@ -122,7 +128,13 @@ class AdvImagePicker {
       bool usingGallery = true,
       bool allowMultiple = true,
       int? maxSize}) async {
-    List<ResultItem>? images = await _pickImages(context);
+    List<ResultItem>? images = await _pickImages(
+      context,
+      usingCamera: usingCamera,
+      usingGallery: usingGallery,
+      allowMultiple: allowMultiple,
+      maxSize: maxSize,
+    );
 
     if (images == null) return null;
 

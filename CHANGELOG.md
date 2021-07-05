@@ -1,3 +1,7 @@
+## 2.0.1+1
+
+* Change dependency for image_list to ^2.0.4+3
+
 ## 2.0.1
 
 * Change dependency for image_list to ^2.0.4+2

@@ -2,6 +2,10 @@
 
 - Migrate Android V2 embedding 
 
+## 2.0.1+2
+
+* Change dependency for image_list to ^2.0.4+3
+
 ## 2.0.1+1
 
 * fix _pickImages method that previously doesn't pass the arguments

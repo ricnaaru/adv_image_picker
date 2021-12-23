@@ -1,6 +1,7 @@
 package ric.com.advimagepicker;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
@@ -12,6 +13,8 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
 
@@ -34,30 +37,173 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-import io.flutter.plugin.common.PluginRegistry.Registrar;
 
 /**
  * AdvImagePickerPlugin
  */
-public class AdvImagePickerPlugin implements MethodCallHandler {
+public class AdvImagePickerPlugin implements FlutterPlugin, ActivityAware, MethodCallHandler {
     private Activity activity;
     private Context context;
     private BinaryMessenger messenger;
     private ThreadPoolExecutor mDecodeThreadPool;
-    private Picasso picasso;
 
-    private AdvImagePickerPlugin(Registrar registrar) {
-        this.activity = registrar.activity();
-        this.context = registrar.context();
-        this.messenger = registrar.messenger();
+    public AdvImagePickerPlugin() {
+        // A queue of Runnables
+        BlockingQueue<Runnable> mDecodeWorkQueue = new LinkedBlockingQueue<>();
+        // Sets the amount of time an idle thread waits before terminating
+        int KEEP_ALIVE_TIME = 1;
+        // Sets the Time Unit to seconds
+        TimeUnit KEEP_ALIVE_TIME_UNIT = TimeUnit.SECONDS;
+
+        mDecodeThreadPool = new ThreadPoolExecutor(
+                1,       // Initial pool size
+                1,       // Max pool size
+                KEEP_ALIVE_TIME,
+                KEEP_ALIVE_TIME_UNIT,
+                mDecodeWorkQueue);
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void registerWith(
+            final io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
+        final MethodChannel channel = new MethodChannel(registrar.messenger(), "adv_image_picker");
+
+        AdvImagePickerPlugin plugin = new AdvImagePickerPlugin();
+        plugin.activity = registrar.activity();
+        plugin.context = registrar.context();
+        plugin.messenger = registrar.messenger();
+
+        channel.setMethodCallHandler(plugin);
+    }
+
+    @Override
+    public void onMethodCall(MethodCall call, @Nullable final Result result) {
+        switch (call.method) {
+            case "getPermission":
+                Dexter.withActivity(activity)
+                        .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                        .withListener(new MultiplePermissionsListener() {
+                            @Override
+                            public void onPermissionsChecked(MultiplePermissionsReport report) {
+                                result.success(report.areAllPermissionsGranted());
+                            }
+
+                            @Override
+                            public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
+                                token.continuePermissionRequest();
+                            }
+                        })
+                        .check();
+                break;
+            case "getAlbums": {
+                Log.d("ricric", "inilah aku " + MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+                String[] projection = {
+                        MediaStore.Images.Media.BUCKET_ID,
+                        MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
+
+                final String orderBy = MediaStore.Images.Media.DISPLAY_NAME;
+
+                Cursor cursor;
+
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                    cursor = context.getContentResolver().query(uri, projection, null, null, orderBy + " DESC", null);
+                } else {
+                    cursor = context.getContentResolver().query(uri, projection, "1) GROUP BY (" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME, null, orderBy + " DESC");
+                }
+
+                ArrayList<HashMap<String, Object>> finalResult = new ArrayList<>();
+                ArrayList<String> finalKeys = new ArrayList<>();
+
+                if (cursor != null) {
+                    int columnId = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID);
+                    int columnName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
+
+                    while (cursor.moveToNext()) {
+                        if (!finalKeys.contains(cursor.getString(columnId))) {
+                            HashMap<String, Object> albumItem = new HashMap<>();
+
+                            albumItem.put("name", cursor.getString(columnName));
+                            albumItem.put("identifier", cursor.getString(columnId));
+                            albumItem.put("assetCount", cursor.getCount());
+                            finalKeys.add(cursor.getString(columnId));
+                            finalResult.add(albumItem);
+                        }
+                    }
+
+                    cursor.close();
+                }
+
+                result.success(finalResult);
+                break;
+            }
+            case "getAlbumAssetsId": {
+                String absolutePathOfImage;
+                Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+
+                String[] projection = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
+                String albumName = call.argument("albumName");
+                albumName = albumName.replaceAll("'", "''");
+
+                final String orderBy = MediaStore.Images.Media.DATE_TAKEN + " DESC";
+                Cursor cursor = context.getContentResolver().query(uri, projection, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " = '" + albumName + "'", null, orderBy);
+                int columnData = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+
+                ArrayList<String> assetIds = new ArrayList<>();
+
+                while (cursor.moveToNext()) {
+                    absolutePathOfImage = cursor.getString(columnData);
+
+                    assetIds.add(absolutePathOfImage);
+                }
+
+                cursor.close();
+                result.success(assetIds);
+                break;
+            }
+            case "getAlbumThumbnail": {
+                final String imagePath = call.argument("imagePath");
+                final int width = call.argument("width");
+                final int height = call.argument("height");
+                final int quality = call.argument("quality");
+                GetThumbnailTask task = new GetThumbnailTask(this.context, this.messenger, imagePath, width, height, quality);
+
+                task.executeOnExecutor(mDecodeThreadPool);
+                result.success(true);
+                break;
+            }
+            case "getAlbumOriginal": {
+                final String imagePath = call.argument("imagePath");
+                final int maxSize = call.argument("maxSize") == null ? 0 : (int) (call.argument("maxSize"));
+                final int quality = call.argument("quality") == null ? 0 : (int) (call.argument("quality"));
+                GetImageTask task = new GetImageTask(this.context, this.messenger, imagePath, quality, maxSize);
+
+                task.executeOnExecutor(mDecodeThreadPool);
+                result.success(true);
+                break;
+            }
+            default:
+                result.notImplemented();
+                break;
+        }
+    }
+
+    @Override
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding binding) {
+        this.context = binding.getApplicationContext();
+        this.messenger = binding.getBinaryMessenger();
 
         // A queue of Runnables
-        BlockingQueue<Runnable> mDecodeWorkQueue = new LinkedBlockingQueue<Runnable>();
+        BlockingQueue<Runnable> mDecodeWorkQueue = new LinkedBlockingQueue<>();
         // Sets the amount of time an idle thread waits before terminating
         int KEEP_ALIVE_TIME = 1;
         // Sets the Time Unit to seconds
@@ -70,133 +216,57 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
                 KEEP_ALIVE_TIME_UNIT,
                 mDecodeWorkQueue);
 
-        picasso = new Picasso.Builder(context).listener(new Picasso.Listener() {
-            @Override
-            public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
-                exception.printStackTrace();
-            }
-        }).build();
-    }
-
-    public static void registerWith(Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "adv_image_picker");
-        channel.setMethodCallHandler(new AdvImagePickerPlugin(registrar));
+        final MethodChannel channel = new MethodChannel(binding.getBinaryMessenger(), "adv_image_picker");
+        channel.setMethodCallHandler(this);
     }
 
     @Override
-    public void onMethodCall(MethodCall call, final Result result) {
-        if (call.method.equals("getPermission")) {
-            Dexter.withActivity(activity)
-                    .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    .withListener(new MultiplePermissionsListener() {
-                        @Override
-                        public void onPermissionsChecked(MultiplePermissionsReport report) {
-                            result.success(report.areAllPermissionsGranted());
-                        }
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
 
-                        @Override
-                        public void onPermissionRationaleShouldBeShown(List<PermissionRequest> permissions, PermissionToken token) {
-                            token.continuePermissionRequest();
-                        }
-                    })
-                    .check();
-        } else if (call.method.equals("getAlbums")) {
-            Log.d("ricric", "inilah aku " +  MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-
-            String[] projection = {
-                    MediaStore.Images.Media.BUCKET_ID,
-                    MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
-
-            final String orderBy = MediaStore.Images.Media.DISPLAY_NAME;
-
-            Cursor cursor = null;
-
-            if (android.os.Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                cursor = context.getContentResolver().query(uri, projection, null, null, orderBy + " DESC", null);
-            } else {
-                cursor = context.getContentResolver().query(uri, projection, "1) GROUP BY (" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME, null, orderBy + " DESC");
-            }
-
-            ArrayList<HashMap<String, Object>> finalResult = new ArrayList<>();
-            ArrayList<String> finalKeys = new ArrayList<>();
-
-            if (cursor != null) {
-                int columnId = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID);
-                int columnName = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME);
-
-                while (cursor.moveToNext()) {
-                    if (!finalKeys.contains(cursor.getString(columnId))) {
-                        HashMap<String, Object> albumItem = new HashMap<>();
-
-                        albumItem.put("name", cursor.getString(columnName));
-                        albumItem.put("identifier", cursor.getString(columnId));
-                        albumItem.put("assetCount", cursor.getCount());
-                        finalKeys.add(cursor.getString(columnId));
-                        finalResult.add(albumItem);
-                    }
-                }
-
-                cursor.close();
-            }
-
-            result.success(finalResult);
-        } else if (call.method.equals("getAlbumAssetsId")) {
-            String absolutePathOfImage = null;
-            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-
-            String[] projection = {MediaStore.Images.Media.DATA, MediaStore.Images.Media.BUCKET_DISPLAY_NAME};
-            String albumName = call.argument("albumName");
-            albumName = albumName.replaceAll("'", "''");
-
-            final String orderBy = MediaStore.Images.Media.DATE_TAKEN + " DESC";
-            Cursor cursor = context.getContentResolver().query(uri, projection, MediaStore.Images.Media.BUCKET_DISPLAY_NAME + " = '" + albumName + "'", null, orderBy);
-            int columnData = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-
-            ArrayList<String> assetIds = new ArrayList<String>();
-
-            while (cursor.moveToNext()) {
-                absolutePathOfImage = cursor.getString(columnData);
-
-                assetIds.add(absolutePathOfImage);
-            }
-
-            cursor.close();
-            result.success(assetIds);
-        } else if (call.method.equals("getAlbumThumbnail")) {
-            final String imagePath = call.argument("imagePath");
-            final int width = call.argument("width");
-            final int height = call.argument("height");
-            final int quality = call.argument("quality");
-            GetThumbnailTask task = new GetThumbnailTask(this.messenger, imagePath, width, height, quality);
-
-            task.executeOnExecutor(mDecodeThreadPool);
-            result.success(true);
-        } else if (call.method.equals("getAlbumOriginal")) {
-            final String imagePath = call.argument("imagePath");
-            final int maxSize = call.argument("maxSize") == null ? 0 : (int) (call.argument("maxSize"));
-            final int quality = call.argument("quality") == null ? 0 : (int) (call.argument("quality"));
-            GetImageTask task = new GetImageTask(this.messenger, imagePath, quality, maxSize);
-
-            task.executeOnExecutor(mDecodeThreadPool);
-            result.success(true);
-        } else {
-            result.notImplemented();
-        }
     }
 
-    private class GetImageTask extends AsyncTask<String, Void, ByteBuffer> {
+    @Override
+    public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+        this.activity = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+        this.activity = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+
+    }
+
+    static private class GetImageTask extends AsyncTask<String, Void, ByteBuffer> {
+        @SuppressLint("StaticFieldLeak")
+        Context context;
         BinaryMessenger messenger;
         String imagePath;
         int quality;
         int maxSize;
+        Picasso picasso;
 
-        GetImageTask(BinaryMessenger messenger, String imagePath, int quality, int maxSize) {
+        GetImageTask(Context context, BinaryMessenger messenger, String imagePath, int quality, int maxSize) {
             super();
+            this.context = context;
             this.messenger = messenger;
             this.imagePath = imagePath;
             this.quality = quality;
             this.maxSize = maxSize;
+            this.picasso = new Picasso.Builder(this.context).listener(new Picasso.Listener() {
+                @Override
+                public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
+                    exception.printStackTrace();
+                }
+            }).build();
         }
 
         @Override
@@ -266,20 +336,30 @@ public class AdvImagePickerPlugin implements MethodCallHandler {
         }
     }
 
-    private class GetThumbnailTask extends AsyncTask<String, Void, ByteBuffer> {
+    static private class GetThumbnailTask extends AsyncTask<String, Void, ByteBuffer> {
+        @SuppressLint("StaticFieldLeak")
+        Context context;
         BinaryMessenger messenger;
         String imagePath;
         int width;
         int height;
         int quality;
+        Picasso picasso;
 
-        GetThumbnailTask(BinaryMessenger messenger, String imagePath, int width, int height, int quality) {
+        GetThumbnailTask(Context context, BinaryMessenger messenger, String imagePath, int width, int height, int quality) {
             super();
+            this.context = context;
             this.messenger = messenger;
             this.imagePath = imagePath;
             this.width = width;
             this.height = height;
             this.quality = quality;
+            this.picasso = new Picasso.Builder(this.context).listener(new Picasso.Listener() {
+                @Override
+                public void onImageLoadFailed(Picasso picasso, Uri uri, Exception exception) {
+                    exception.printStackTrace();
+                }
+            }).build();
         }
 
         @Override

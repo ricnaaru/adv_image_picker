@@ -47,7 +47,7 @@ class _ResultPageSate extends State<ResultPage> {
               children: [
                 Expanded(
                   child: Center(
-                    child: FlatButton(
+                    child: MaterialButton(
                       child: Padding(
                         padding: EdgeInsets.all(8),
                         child: Column(
@@ -66,7 +66,7 @@ class _ResultPageSate extends State<ResultPage> {
                 ),
                 Expanded(
                   child: Center(
-                    child: FlatButton(
+                    child: MaterialButton(
                       minWidth: 0,
                       child: Padding(
                         padding: EdgeInsets.all(8),

@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -61,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     //flushing every memory that was taken before
-    if ((thumbnails?.length ?? 0) > 0) {
+    if ((thumbnails.length) > 0) {
       for (ImageProvider each in thumbnails) {
         each.evict();
       }
@@ -71,7 +71,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _pickImage() async {
-    files.addAll(await AdvImagePicker.pickImagesToFile(context, maxSize: 4080));
+    final result = await AdvImagePicker.pickImagesToFile(context, maxSize: 4080) ?? <File>[];
+    files.addAll(result);
     print("files => ${files.map((e) => e.path).join("\n")}");
     prepare();
   }

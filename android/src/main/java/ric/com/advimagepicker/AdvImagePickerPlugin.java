@@ -104,7 +104,6 @@ public class AdvImagePickerPlugin implements FlutterPlugin, ActivityAware, Metho
                         .check();
                 break;
             case "getAlbums": {
-                Log.d("ricric", "inilah aku " + MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 
                 String[] projection = {

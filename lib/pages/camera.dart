@@ -299,7 +299,7 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FlatButton(
+    return MaterialButton(
       child: Padding(
         padding: EdgeInsets.all(8),
         child: Column(

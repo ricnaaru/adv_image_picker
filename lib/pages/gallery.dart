@@ -239,7 +239,7 @@ class _SmartButtonState extends State<_SmartButton> {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(16.0),
-      child: FlatButton(
+      child: MaterialButton(
         child: Text(
           "${AdvImagePicker.next} (${widget.controller.value})",
           style: TextStyle(fontWeight: FontWeight.w500, color: Colors.white),

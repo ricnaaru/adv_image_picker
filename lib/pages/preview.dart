@@ -202,7 +202,6 @@ class PreviewController extends ValueNotifier<PreviewEditingValue> {
   }
 }
 
-@immutable
 class PreviewEditingValue {
   const PreviewEditingValue({
     int? currentImage,

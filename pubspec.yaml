@@ -1,19 +1,20 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI, depend on AdvCamera (Custom camera with focus and zoom functionality) and ImageList (A native image list view to render image optimally).
-version: 2.0.2
+version: 3.0.0
 homepage: https://github.com/ricnaaru/adv_image_picker
 
 environment:
-  sdk: ">=2.12.2 <3.0.0"
-  flutter: ">=1.20.0"
+  sdk: ">=2.17.0 <3.0.0"
+  flutter: ">=3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
-  adv_camera: ^2.0.3+2
-  path_provider: ^2.0.2
-  image_list: ^2.0.4+3
+  adv_camera: ^3.0.0
+  path_provider: ^2.0.11
+  image_list: ^3.0.0
+  platform: ^3.1.0
 
 flutter:
   plugin:

@@ -3,6 +3,7 @@ package ric.com.advimagepicker;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.os.Build;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -32,6 +33,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -88,8 +91,11 @@ public class AdvImagePickerPlugin implements FlutterPlugin, ActivityAware, Metho
     public void onMethodCall(MethodCall call, @Nullable final Result result) {
         switch (call.method) {
             case "getPermission":
-                Dexter.withActivity(activity)
-                        .withPermissions(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                List<String> s =
+                        (Build.VERSION.SDK_INT >= 33) ? Collections.singletonList(Manifest.permission.CAMERA) : Arrays.asList(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+                Dexter.withContext(context)
+                        .withPermissions(s)
                         .withListener(new MultiplePermissionsListener() {
                             @Override
                             public void onPermissionsChecked(MultiplePermissionsReport report) {

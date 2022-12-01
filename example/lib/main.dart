@@ -7,7 +7,8 @@ import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  CustomImageCache();
+  WidgetsFlutterBinding.ensureInitialized();
+  // CustomImageCache();
   runApp(MyApp());
 }
 

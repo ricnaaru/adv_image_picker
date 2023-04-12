@@ -1,6 +1,7 @@
 ## 3.0.3+1
 
 * Turn off camera while not at the top of the navigator stack
+* Define platform version to 11, for IOS
 
 ## 3.0.2+1
 

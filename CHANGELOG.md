@@ -1,3 +1,7 @@
+## 3.0.3+1
+
+* Turn off camera while not at the top of the navigator stack
+
 ## 3.0.2+1
 
 * Support for Android 33

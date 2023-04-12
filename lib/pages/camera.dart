@@ -26,7 +26,7 @@ class CameraPage extends StatefulWidget {
   }
 }
 
-class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
+class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver, RouteAware {
   AdvCameraController? controller;
   String? imagePath;
   Completer<String>? takePictureCompleter;
@@ -37,12 +37,39 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    AdvImagePicker.routeObserver?.subscribe(this, ModalRoute.of(context) as PageRoute<dynamic>);
+  }
+
+  @override
+  void dispose() {
+    AdvImagePicker.routeObserver?.unsubscribe(this);
+    WidgetsBinding.instance!.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didPop() {
+    controller?.turnOffCamera();
+  }
+
+  @override
+  void didPopNext() {
+    controller?.turnOnCamera();
+  }
+
+  @override
+  void didPushNext() {
+    controller?.turnOffCamera();
+  }
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
     if (AdvImagePicker.cameraSavePath == null) {
       AdvImagePicker.getDefaultDirectoryForCamera().then((dir) async {
-        print("diu => $dir");
         if (dir == null) return;
 
         await dir.create(recursive: true);
@@ -186,12 +213,6 @@ class _CameraPageState extends State<CameraPage> with WidgetsBindingObserver {
     await controller!.captureImage(maxSize: widget.maxSize);
 
     return await takePictureCompleter!.future;
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
-    super.dispose();
   }
 
   void _onCameraCreated(AdvCameraController controller) {

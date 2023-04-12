@@ -25,10 +25,11 @@ class AdvImagePicker {
   static String confirm = "Confirm";
   static String cancel = "Cancel";
   static String? cameraSavePath;
-  static String cameraFolderName =
-      "images"; //only used if you dont specify [AdvImagePicker.cameraSavePath]
+  static String cameraFolderName = "images"; //only used if you dont specify [AdvImagePicker.cameraSavePath]
   static String cameraFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
+
+  static RouteObserver<PageRoute>? routeObserver;
 
   static Future<List<ResultItem>?> _pickImages(
     BuildContext context, {
@@ -58,10 +59,7 @@ class AdvImagePicker {
     }
 
     Widget advImagePickerHome = usingCamera
-        ? CameraPage(
-            enableGallery: usingGallery,
-            allowMultiple: allowMultiple,
-            maxSize: maxSize)
+        ? CameraPage(enableGallery: usingGallery, allowMultiple: allowMultiple, maxSize: maxSize)
         : GalleryPage(allowMultiple: allowMultiple, maxSize: maxSize);
 
     List<ResultItem>? images = await Navigator.push(
@@ -103,8 +101,7 @@ class AdvImagePicker {
         final String dirPath = '${extDir.path}/Pictures/flutter_test';
         await Directory(dirPath).create(recursive: true);
         final String filePath = '$dirPath/${_timestamp()}.jpg';
-        file = await File(filePath).writeAsBytes(
-            buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+        file = await File(filePath).writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
       }
 
       files.add(file);
@@ -124,10 +121,7 @@ class AdvImagePicker {
   }
 
   static Future<List<ByteData>?> pickImagesToByte(BuildContext context,
-      {bool usingCamera = true,
-      bool usingGallery = true,
-      bool allowMultiple = true,
-      int? maxSize}) async {
+      {bool usingCamera = true, bool usingGallery = true, bool allowMultiple = true, int? maxSize}) async {
     List<ResultItem>? images = await _pickImages(
       context,
       usingCamera: usingCamera,
@@ -164,8 +158,7 @@ class AdvImagePicker {
     return bytes.buffer.asByteData();
   }
 
-  static String _timestamp() =>
-      DateTime.now().millisecondsSinceEpoch.toString();
+  static String _timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   static Future<Directory?> getDefaultDirectoryForCamera() async {
     Directory? extDir;

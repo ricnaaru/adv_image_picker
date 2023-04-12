@@ -5,8 +5,10 @@ import 'dart:typed_data';
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/plugins/adv_image_picker_plugin.dart';
 import 'package:flutter/material.dart';
+ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 void main() {
+  AdvImagePicker.routeObserver = routeObserver;
   WidgetsFlutterBinding.ensureInitialized();
   // CustomImageCache();
   runApp(MyApp());
@@ -27,6 +29,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [routeObserver],
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -72,9 +75,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _pickImage() async {
-    final result = await AdvImagePicker.pickImagesToFile(context, maxSize: 4080) ?? <File>[];
+    final result = await AdvImagePicker.pickImagesToFile(context,) ?? <File>[];
     files.addAll(result);
     print("files => ${files.map((e) => e.path).join("\n")}");
+    print("size of files => ${files.map((e) => e.lengthSync()).join("\n")}");
     prepare();
   }
 

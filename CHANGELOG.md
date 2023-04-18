@@ -1,10 +1,6 @@
-## 3.0.3+3
+## 3.0.3+4
 
-* Minor fix on adv camera
-
-## 3.0.3+2
-
-* Minor fix on adv camera
+* adv_camera updates
 
 ## 3.0.3+1
 

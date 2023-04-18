@@ -1,3 +1,7 @@
+## 3.0.3+2
+
+* Minor fix on adv camera
+
 ## 3.0.3+1
 
 * Turn off camera while not at the top of the navigator stack

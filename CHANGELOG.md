@@ -1,4 +1,4 @@
-## 3.0.3+4
+## 3.0.3+5
 
 * adv_camera updates
 

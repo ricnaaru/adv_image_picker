@@ -1,6 +1,6 @@
 name: adv_image_picker
 description: An advanced image picker with our custom UI, depend on AdvCamera (Custom camera with focus and zoom functionality) and ImageList (A native image list view to render image optimally).
-version: 3.0.3+4
+version: 3.0.3+5
 homepage: https://github.com/ricnaaru/adv_image_picker
 
 environment:

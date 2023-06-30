@@ -29,8 +29,6 @@ class AdvImagePicker {
   static String cameraFilePrefixName = "adv_image_picker";
   static FlashType defaultFlashType = FlashType.auto;
 
-  static RouteObserver<PageRoute>? routeObserver;
-
   static Future<List<ResultItem>?> _pickImages(
     BuildContext context, {
     bool usingCamera = true,

@@ -74,19 +74,6 @@ public class AdvImagePickerPlugin implements FlutterPlugin, ActivityAware, Metho
                 mDecodeWorkQueue);
     }
 
-    @SuppressWarnings("deprecation")
-    public static void registerWith(
-            final io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-        final MethodChannel channel = new MethodChannel(registrar.messenger(), "adv_image_picker");
-
-        AdvImagePickerPlugin plugin = new AdvImagePickerPlugin();
-        plugin.activity = registrar.activity();
-        plugin.context = registrar.context();
-        plugin.messenger = registrar.messenger();
-
-        channel.setMethodCallHandler(plugin);
-    }
-
     @Override
     public void onMethodCall(MethodCall call, @Nullable final Result result) {
         switch (call.method) {

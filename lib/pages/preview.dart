@@ -229,7 +229,7 @@ class PreviewEditingValue {
       'filesPath: \u2524$filesPath\u251C)';
 
   @override
-  bool operator ==(dynamic other) {
+  bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! PreviewEditingValue) return false;
     final PreviewEditingValue typedOther = other;
@@ -238,5 +238,5 @@ class PreviewEditingValue {
   }
 
   @override
-  int get hashCode => hashValues(currentImage.hashCode, filesPath.hashCode);
+  int get hashCode => Object.hash(currentImage.hashCode, filesPath.hashCode);
 }

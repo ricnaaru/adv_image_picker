@@ -2,8 +2,7 @@
 import 'package:adv_image_picker/adv_image_picker.dart';
 import 'package:adv_image_picker/models/result_item.dart';
 import 'package:adv_image_picker/pages/preview.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart' hide Preview;
 
 class ResultPage extends StatefulWidget {
   final List<ResultItem> images;

@@ -11,10 +11,10 @@ dependencies:
   flutter:
     sdk: flutter
 
-  adv_camera: ^3.1.0
-  path_provider: ^2.0.15
-  image_list: ^3.0.3
-  platform: ^3.1.0
+  adv_camera: ^3.2.0
+  path_provider: ^2.1.5
+  image_list: ^3.1.0
+  platform: ^3.1.6
 
 flutter:
   plugin:

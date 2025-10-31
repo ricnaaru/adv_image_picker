@@ -1,3 +1,7 @@
+## 3.2.0
+
+* Upgrade to Flutter 3.32
+
 ## 3.1.0
 
 * Integrate new adv_camera
